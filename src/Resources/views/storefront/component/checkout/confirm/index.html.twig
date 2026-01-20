@@ -1,0 +1,385 @@
+{% set isAgent =
+    (context.imitatingUserId is defined and context.imitatingUserId)
+    or (context.customer and context.customer.customFields is defined
+        and (context.customer.customFields.salesrep ?? false) in [true, 1, '1'])
+%}
+
+{% block page_checkout_aside_actions %}
+    <div class="checkout-aside-action">
+        <form id="confirmOrderForm"
+              action="{{ path('frontend.checkout.finish.order') }}"
+              method="post"
+              data-form-preserver="true"
+              data-form-submit-loader="true">
+
+            <input type="hidden" name="hash" value="{{ page.cart.getHash }}">
+
+            <input type="hidden" name="salesrep_split_email" id="salesrepSplitEmail" value="">
+            <input type="hidden" name="salesrep_split_percent" id="salesrepSplitPercent" value="">
+
+            <div class="d-grid">
+                <button id="confirmFormSubmit"
+                        class="btn btn-primary btn-lg"
+                        type="submit"
+                    {% if page.cart.errors.blockResubmit %}disabled{% endif %}>
+                    {{ 'checkout.confirmSubmit'|trans|sw_sanitize }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if isAgent %}
+        <style>
+            #salesrepSplitModal .sa-focusable {
+                border: 1px solid #dde5ee !important;
+                box-shadow: none;
+            }
+
+            #salesrepSplitModal .sa-input-active {
+                border: 1px solid #ab8355 !important;
+            }
+
+            .btn.is-loading,
+            .btn[disabled].is-loading {
+                pointer-events: none;
+                position: relative;
+            }
+
+            #salesrepSplitClose:hover { background: rgba(0,0,0,.06); }
+            #salesrepSplitClose:focus { outline: 2px solid #ab8355; outline-offset: 2px; }
+            #salesrepSplitModal .sa-error-text {
+                color: #dc3545;
+                font-size: 12px;
+                margin-top: 4px;
+            }
+
+            #salesrepSplitModal .sa-has-error {
+                border: 1px solid #dc3545 !important;
+            }
+        </style>
+
+        <div id="salesrepSplitModal"
+             style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+            <div id="salesrepSplitModalBody"
+                 style="background:#fff;border-radius:6px;min-width:360px;max-width:90vw;padding:18px 20px;box-shadow:0 15px 40px rgba(0,0,0,.25);">
+
+                <div strepdisplay:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                    <h3 style="margin:0;">Split commission</h3>
+
+                    <button type="button"
+                            id="salesrepSplitClose"
+                            aria-label="Close"
+                            style="
+                                border:0;
+                                background:transparent;
+                                width:34px;
+                                height:34px;
+                                border-radius:8px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                cursor:pointer;
+                                color:#6b7280;
+                            ">
+                        <span aria-hidden="true" style="font-size:22px;line-height:1;">&times;</span>
+                    </button>
+                </div>
+
+                <p style="margin-bottom:16px;">Do you want to split commission with other sales agent?</p>
+
+                <div style="margin-bottom:12px;">
+                    <label for="salesrepSplitModalEmail" style="display:block;margin-bottom:4px;">Sales agent email</label>
+                    <input type="email"
+                           id="salesrepSplitModalEmail"
+                           class="form-control sa-focusable"
+                           placeholder="agent@example.com">
+
+                    <div id="salesrepSplitEmailError"
+                         class="sa-error-text"
+                         style="display:none;"></div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label for="salesrepSplitModalPercent" style="display:block;margin-bottom:4px;">Percent (%)</label>
+                    <input type="text"
+                           id="salesrepSplitModalPercent"
+                           class="form-control sa-focusable"
+                           inputmode="numeric"
+                           pattern="[0-9]*"
+                           autocomplete="off"
+                           placeholder="10">
+
+                    <div id="salesrepSplitPercentError"
+                         class="sa-error-text"
+                         style="display:none;"></div>
+                </div>
+
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" id="salesrepSplitCancel" class="btn btn-secondary btn-sm">Skip</button>
+                    <button type="button" id="salesrepSplitSave" class="btn btn-primary btn-sm">Save & continue</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                if (window.__SALES_REP_SPLIT_INIT__) return;
+                window.__SALES_REP_SPLIT_INIT__ = true;
+
+                console.log('[SalesrepSplit] init (agent only)');
+
+                const form = document.getElementById('confirmOrderForm');
+                const submitBtn = document.getElementById('confirmFormSubmit');
+                const modal = document.getElementById('salesrepSplitModal');
+                const btnClose = document.getElementById('salesrepSplitClose');
+                const btnSave = document.getElementById('salesrepSplitSave');
+                const btnCancel = document.getElementById('salesrepSplitCancel');
+                const modalEmail = document.getElementById('salesrepSplitModalEmail');
+                const modalPercent = document.getElementById('salesrepSplitModalPercent');
+                const hiddenEmail = document.getElementById('salesrepSplitEmail');
+                const hiddenPercent = document.getElementById('salesrepSplitPercent');
+                const emailError = document.getElementById('salesrepSplitEmailError');
+                const percentError = document.getElementById('salesrepSplitPercentError');
+
+                function showError(inputEl, errorEl, message) {
+                    if (inputEl) inputEl.classList.add('sa-has-error');
+                    if (errorEl) {
+                        errorEl.textContent = message;
+                        errorEl.style.display = 'block';
+                    }
+                }
+
+                function clearError(inputEl, errorEl) {
+                    if (inputEl) inputEl.classList.remove('sa-has-error');
+                    if (errorEl) {
+                        errorEl.textContent = '';
+                        errorEl.style.display = 'none';
+                    }
+                }
+
+                async function isValidEmail(email) {
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        return false;
+                    }
+
+                    try {
+                    const res = await fetch('/salesrep/validate-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ email })
+                    });
+
+                        if (!res.ok) return false;
+
+                        const data = await res.json();
+                        return data.valid === true;
+                    } catch (e) {
+                        console.error('Email validation failed', e);
+                        return false;
+                    }
+                }
+
+                modalEmail?.addEventListener('input', function () {
+                    clearError(modalEmail, emailError);
+                });
+
+                modalPercent?.addEventListener('input', function () {
+                    clearError(modalPercent, percentError);
+                });
+
+
+                if (!form) {
+                    console.warn('[SalesrepSplit] form not found');
+                    return;
+                }
+
+                let modalShownOnce = false;
+                let allowSubmit = false;
+                const SUBMIT_DELAY_MS = 3000;
+
+                // ---------------------------
+                // Percent: digits-only + positive-only + clamp 0..100
+                // ---------------------------
+                function digitsOnly(raw) {
+                    return String(raw ?? '').replace(/[^\d]/g, '');
+                }
+
+                function clamp0to100(raw) {
+                    const d = digitsOnly(raw);
+                    if (!d) return '';
+                    let n = parseInt(d, 10);
+                    if (!Number.isFinite(n)) return '';
+                    n = Math.max(0, Math.min(100, n));
+                    return String(n);
+                }
+
+                // If you want strictly > 0, swap Math.max(0, ...) to Math.max(1, ...)
+                // ---------------------------
+
+                function hardBlockSubmit(e) {
+                    if (!allowSubmit) {
+                        console.log('[SalesrepSplit] blocked foreign submit');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                    }
+                }
+                form.addEventListener('submit', hardBlockSubmit, true);
+
+                function openModal() {
+                    console.log('[SalesrepSplit] openModal');
+                    modal.style.display = 'flex';
+                    setTimeout(() => modalEmail && modalEmail.focus(), 50);
+                }
+
+                function closeModal() {
+                    modal.style.display = 'none';
+                }
+
+                function setMainButtonLoading() {
+                    if (!submitBtn) return;
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('is-loading');
+                }
+
+                function reallySubmit() {
+                    console.log('[SalesrepSplit] reallySubmit()');
+                    allowSubmit = true;
+                    form.removeEventListener('submit', hardBlockSubmit, true);
+                    form.submit();
+                }
+
+                function submitWithDelay() {
+                    console.log('[SalesrepSplit] submitWithDelay', SUBMIT_DELAY_MS);
+                    setTimeout(reallySubmit, SUBMIT_DELAY_MS);
+                }
+
+                // Percent: block non-digits on keydown, sanitize on paste/input
+                modalPercent?.addEventListener('keydown', function (ev) {
+                    const allowed = [
+                        'Backspace','Delete','Tab','Escape','Enter',
+                        'ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'
+                    ];
+                    if (allowed.includes(ev.key)) return;
+                    if (ev.ctrlKey || ev.metaKey) return; // allow cmd/ctrl shortcuts
+                    if (!/^\d$/.test(ev.key)) ev.preventDefault();
+                });
+
+                modalPercent?.addEventListener('paste', function (ev) {
+                    ev.preventDefault();
+                    const text = (ev.clipboardData || window.clipboardData).getData('text');
+                    modalPercent.value = clamp0to100(text);
+                });
+
+                modalPercent?.addEventListener('input', function () {
+                    modalPercent.value = clamp0to100(modalPercent.value);
+                });
+
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function (e) {
+                        console.log('[SalesrepSplit] button click');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+
+                        if (!modalShownOnce) {
+                            openModal();
+                        } else {
+                            setMainButtonLoading();
+                            submitWithDelay();
+                        }
+                    }, true);
+                }
+
+                form.addEventListener('submit', function (e) {
+                    console.log('[SalesrepSplit] form submit (fallback)');
+                    if (!modalShownOnce && !allowSubmit) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        openModal();
+                    }
+                }, true);
+
+                btnSave?.addEventListener('click', async function () {
+                    const emailVal = (modalEmail?.value || '').trim();
+                    const percVal = clamp0to100(modalPercent?.value);
+
+                    clearError(modalEmail, emailError);
+                    clearError(modalPercent, percentError);
+
+                    if (!emailVal) {
+                        showError(modalEmail, emailError, 'Sales agent email is required');
+                        return;
+                    }
+
+                    if (!percVal) {
+                        showError(modalPercent, percentError, 'Percent is required');
+                        return;
+                    }
+
+                    const isValid = await isValidEmail(emailVal);
+
+                    if (!isValid) {
+                        showError(modalEmail, emailError, 'Sales agent email does not exist or is not a Sales Agent');
+                        return;
+                    }
+                hiddenEmail.value = emailVal;
+                    hiddenPercent.value = percVal;
+
+                    modalShownOnce = true;
+                    closeModal();
+                    setMainButtonLoading();
+                    submitWithDelay();
+                });
+
+                btnCancel?.addEventListener('click', function () {
+
+                    clearError(modalEmail, emailError);
+                    clearError(modalPercent, percentError);
+
+                    hiddenEmail.value = '';
+                    hiddenPercent.value = '';
+
+                    modalShownOnce = true;
+                    closeModal();
+
+                    setMainButtonLoading();
+                    submitWithDelay();
+                });
+
+                btnClose?.addEventListener('click', function () {
+                    console.log('[SalesrepSplit] X close (no submit)');
+                    closeModal();
+                });
+
+                modal?.addEventListener('click', function (ev) {
+                    if (ev.target === modal) {
+                        console.log('[SalesrepSplit] backdrop close (no submit)');
+                        closeModal();
+                    }
+                });
+
+                document.addEventListener('keydown', function (ev) {
+                    if (ev.key === 'Escape' && modal.style.display === 'flex') {
+                        console.log('[SalesrepSplit] ESC close (no submit)');
+                        closeModal();
+                    }
+                });
+
+                const focusables = [modalEmail, modalPercent].filter(Boolean);
+                focusables.forEach(function (el) {
+                    el.addEventListener('focus', function () {
+                        el.classList.add('sa-input-active');
+                    });
+                    el.addEventListener('blur', function () {
+                        el.classList.remove('sa-input-active');
+                    });
+                });
+
+                console.log('[SalesrepSplit] ready');
+            })();
+        </script>
+    {% endif %}
+{% endblock %}

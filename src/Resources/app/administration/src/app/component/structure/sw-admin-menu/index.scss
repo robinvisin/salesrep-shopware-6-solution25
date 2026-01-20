@@ -1,0 +1,44 @@
+body.is-salesrep {
+    //add customer button
+    .sw-order-customer-grid__add-customer {
+        display: none !important;
+    }
+    .sw-order-list__order-trigger-google-invite{
+        display: none !important;
+    }
+    .sw-order-list__order-schedule-google-invite{
+        display: none !important;
+        
+    }
+    .sw-admin-menu__item--sw-tax-jar-log,
+    .navigation-list-item__sw-tax-jar-log,
+    .sw-admin-menu__navigation-list-item.sw-tax-jar-log {
+        display: none !important;
+    }
+    .sw-admin-menu__item--route-claims-list,
+    .navigation-list-item__route-claims-list,
+    .sw-admin-menu__navigation-list-item.route-claims-list {
+        display: none !important;
+    }
+    .sw-admin-menu__item--sw-nexus-module,
+    .navigation-list-item__sw-nexus-module,
+    .sw-admin-menu__navigation-list-item.sw-nexus-module {
+        display: none !important;
+    }
+    // Marketing
+    .sw-admin-menu__item--sw-marketing,
+    .navigation-list-item__sw-marketing,
+    .sw-admin-menu__navigation-list-item.sw-marketing,
+
+    // Content
+    .sw-admin-menu__item--sw-content,
+    .navigation-list-item__sw-content,
+    .sw-admin-menu__navigation-list-item.sw-content,
+
+    // Settings
+    .sw-admin-menu__item--sw-settings,
+    .navigation-list-item__sw-settings,
+    .sw-admin-menu__navigation-list-item.sw-settings {
+        display: none !important;
+    }
+}

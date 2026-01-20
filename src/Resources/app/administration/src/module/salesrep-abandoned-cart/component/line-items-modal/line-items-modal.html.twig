@@ -1,0 +1,23 @@
+<sw-modal
+    v-if="visible"
+    :title="$tc('abandoned-cart-admin.modalTitleLineItems')"
+    @modal-close="close"
+    size="small"
+>
+    <sw-data-grid
+        :dataSource="items"
+        :columns="columns"
+        :showSelection="false"
+        :showActions="false"
+    >
+        <template #column-label="{ item }">
+            {{ item.label }}
+        </template>
+        <template #column-quantity="{ item }">
+            {{ item.quantity }}
+        </template>
+        <template #column-unitPrice="{ item }">
+            {{ formatCurrency(item.unitPrice) }}
+        </template>
+    </sw-data-grid>
+</sw-modal>

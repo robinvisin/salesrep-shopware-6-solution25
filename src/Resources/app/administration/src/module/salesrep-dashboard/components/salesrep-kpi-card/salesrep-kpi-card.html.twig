@@ -1,0 +1,22 @@
+<sw-card>
+  <template #title>
+    <div class="kpi-title-wrapper">
+      <div class="kpi-title">This Month Sales</div>
+      <div class="kpi-title">This Month Commission</div>
+    </div>
+  </template>
+
+  <div class="kpi-wrapper">
+    <template v-if="isLoading">
+      <div class="kpi-skeleton-wrapper">
+        <div class="kpi-skeleton"></div>
+        <div class="kpi-skeleton"></div>
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="kpi-value">{{ formatCurrency(this.value) }}</div>
+      <div class="kpi-value">{{ formatCurrency(this.monthlyTotal) }}</div>
+    </template>
+  </div>
+</sw-card>

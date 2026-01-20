@@ -1,0 +1,66 @@
+<sw-card>
+    <template #title>
+        <div style="display:flex; gap:5px;">
+            {{ $tc('salesrep.dashboard.currentOrders') }} <span class="kpi-inline">({{ count }})</span>
+        </div>
+    </template>
+    <template v-if="count > 0">
+
+    <sw-data-grid
+        :dataSource="orders"
+        :columns="columns"
+        :showSelection="false"
+        :isLoading="loading"
+        :showActions="false"
+    >
+        <template #column-orderNumber="{ item }">
+            <a
+                :href="`/admin#/sw/order/detail/${item.orderId}/general`"
+            >
+                {{ item.orderNumber }}
+            </a>
+        </template>
+
+        <template #column-fullName="{ item }">
+            <a
+                v-if="item.orderCustomer?.customer?.id"
+                :href="`/admin#/sw/customer/detail/${item.orderCustomer.customer.id}/base?edit=false`"
+            >
+                {{ item.fullName }}
+            </a>
+            <span v-else>{{ item.fullName }}</span>
+        </template>
+
+        <template #column-amountTotal="{ item }">
+            {{ formatCurrency(item.amountTotal) }}
+        </template>
+
+        <template #column-commission="{ item }">
+        {{ formatCurrency(item.commission, item.currencyIso || 'USD') }}
+        </template>
+
+
+        <template #column-orderDate="{ item }">
+            {{ formatDate(item.orderDateTime) }}
+        </template>
+
+        <template #actions="{ item }">
+            <sw-context-menu-item @click="openPricingModal(item)">
+                {{ $tc('salesrep.dashboard.editPricing') }}
+            </sw-context-menu-item>
+        </template>
+    </sw-data-grid>
+
+    <salesrep-pagination
+        :totalItems="count"
+        :currentPage="page"
+        :limit="limit"
+        @page-change="goToPage"
+    />
+    </template>
+        <template v-else>
+        <div class="sw-empty-state">
+            <p>{{ $tc('No linked orders found.') }}</p>
+        </div>
+    </template>
+</sw-card>

@@ -1,0 +1,186 @@
+{% sw_extends '@Storefront/storefront/component/shipping/shipping-method.html.twig' %}
+
+{% block component_shipping_method_field %}
+    {% set isAgent =
+        (context.imitatingUserId is defined and context.imitatingUserId)
+        or (context.customer and context.customer.customFields is defined
+            and (context.customer.customFields.salesrep ?? false) in [true, 1, '1'])
+    %}
+
+    {% set cfT = shipping.translated.customFields ?? {} %}
+    {% set cf  = shipping.customFields ?? {} %}
+    {% set isAgentOnly = (cfT.salesrep_only ?? cf.salesrep_only ?? 0) in [true, 1, '1'] %}
+    {% set limit = page.extensions.saAgentCfg.discountLimit|default(0) %}
+
+    {% set shippingCost = null %}
+    {% for delivery in page.cart.deliveries %}
+        {% if delivery.shippingMethod.id == shipping.id %}
+            {% set shippingCost = delivery.shippingCosts.unitPrice %}
+        {% endif %}
+    {% endfor %}
+
+    {% if isAgentOnly and not isAgent %}
+        <div class="nonvisible-for-customer"></div>
+    {% else %}
+        {{ parent() }}
+
+        {% if isAgent and shippingCost is not null %}
+            {% set current = shipping.customFields.saCustomShippingPrice ?? shippingCost %}
+            {% set orig = shippingCost %}
+
+            <div class="sa-shipping-editor mt-3"
+                 data-sa-shipping-editor
+                 data-shipping-id="{{ shipping.id }}"
+                 data-orig="{{ orig|number_format(2, '.', '') }}"
+                 data-limit="{{ limit|number_format(2, '.', '') }}">
+                <label class="form-label" for="sa-shipping-price-{{ shipping.id }}">
+                    Agent shipping price
+                </label>
+
+                <div class="input-group">
+                    <input id="sa-shipping-price-{{ shipping.id }}"
+                           class="form-control js-sa-shipping-input"
+                           type="number"
+                           step="0.01"
+                           min="0"
+                           max="{{ orig|number_format(2, '.', '') }}"
+                           value="{{ current|number_format(2, '.', '') }}" />
+                    <button type="button" class="btn btn-primary js-sa-shipping-apply">
+                        Apply shipping price
+                    </button>
+                </div>
+
+                <div class="mt-1 small text-muted">
+                    Discount limit applies automatically (up to −{{ limit|number_format(1, '.', '') }}%).
+                </div>
+                <div class="mt-1 small text-danger d-none js-sa-shipping-error"></div>
+            </div>
+
+            <script>
+            (function () {
+              if (window.__saShippingEditorInlineLoaded) return;
+              window.__saShippingEditorInlineLoaded = true;
+
+              function bind(root) {
+                var nodes = (root || document).querySelectorAll('[data-sa-shipping-editor]');
+                if (!nodes || !nodes.length) return;
+
+                nodes.forEach(function (el) {
+                  if (el.dataset.saBound === '1') return;
+                  el.dataset.saBound = '1';
+
+                  var input = el.querySelector('.js-sa-shipping-input');
+                  var btn   = el.querySelector('.js-sa-shipping-apply');
+                  var err   = el.querySelector('.js-sa-shipping-error');
+
+                  var shippingId = el.dataset.shippingId;
+                  var orig  = parseFloat(el.dataset.orig || '0');
+                  var limit = parseFloat(el.dataset.limit || '0');
+
+                  if (!input || !btn || !shippingId || !orig) return;
+
+                  function showError(msg) {
+                    if (err) { err.textContent = msg; err.classList.remove('d-none'); }
+                    if (input) input.classList.add('is-invalid');
+                  }
+                  function clearError() {
+                    if (err) { err.textContent = ''; err.classList.add('d-none'); }
+                    if (input) input.classList.remove('is-invalid');
+                  }
+
+                  if (!(limit > 0)) {
+                    input.disabled = true;
+                    btn.disabled = true;
+                    showError('Discount is disabled for this shipping method.');
+                  }
+
+                  btn.addEventListener('click', function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    clearError();
+
+                    if (!(limit > 0)) {
+                      return showError('Discount is disabled for this shipping method.');
+                    }
+
+                    var raw = (input.value || '').toString().replace(',', '.');
+                    var val = parseFloat(raw);
+
+                    if (!isFinite(val) || val < 0) {
+                      return showError('Enter a valid price.');
+                    }
+                    if (val > orig + 1e-6) {
+                      return showError('Price cannot exceed ' + orig.toFixed(2) + '.');
+                    }
+
+                    var minAllowed = orig * (1 - (limit / 100));
+                    if (val < (minAllowed - 1e-6)) {
+                      return showError('Too low. Minimum allowed is ' + minAllowed.toFixed(2) + '.');
+                    }
+
+                    (async function submit(price) {
+                      try {
+                        var headers = {
+                          'Content-Type': 'application/x-www-form-urlencoded',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        };
+                        var csrf = document.querySelector('meta[name="csrf-token"]');
+                        if (csrf && csrf.getAttribute('content')) {
+                          headers['sw-csrf-token'] = csrf.getAttribute('content');
+                        }
+
+                        var body = new URLSearchParams({
+                          shippingId: String(shippingId),
+                          price: String(price)
+                        });
+
+                        var resp = await fetch('/salesrep/shipping/price', {
+                          method: 'POST',
+                          credentials: 'same-origin',
+                          headers: headers,
+                          body: body
+                        });
+
+                        if (!resp.ok) {
+                          var msg = 'Failed to apply shipping price.';
+                          try {
+                            var j = await resp.json();
+                            if (j && j.error) msg = j.error;
+                          } catch (_e) {}
+                          return showError(msg);
+                        }
+
+                        window.location.reload();
+                      } catch (_err) {
+                        showError('Network error applying shipping price.');
+                      }
+                    })(val);
+                  });
+                });
+              }
+
+              function init(){ bind(document); }
+
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init, { once: true });
+              } else {
+                init();
+              }
+
+              document.addEventListener('ajaxReloaded', init);
+
+              var mo = new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                  var m = mutations[i];
+                  if (!m.addedNodes) continue;
+                  for (var j = 0; j < m.addedNodes.length; j++) {
+                    var n = m.addedNodes[j];
+                    if (n && n.nodeType === 1) bind(n);
+                  }
+                }
+              });
+              mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+            </script>
+        {% endif %}
+    {% endif %}
+{% endblock %}

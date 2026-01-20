@@ -1,0 +1,255 @@
+{% set tomorrow = "now"|date_modify("+1 day")|date("Y-m-d") %}
+{% set accessKey = context.salesChannel.accessKey %}
+{% set isAgent =
+    (context.imitatingUserId is defined and context.imitatingUserId)
+    or (context.customer and context.customer.customFields is defined
+        and (context.customer.customFields.salesrep ?? false) in [true, 1, '1'])
+%}
+
+{{ dump(isAgent) }}
+
+{% if isAgent %}
+<div
+    style="margin-bottom: 15px;"
+    class="card checkout-card"
+    id="salesrep-cart-note"
+    data-endpoint="{{ path('store-api.salesrep.cart.note') }}"
+    data-min-date="{{ tomorrow }}"
+    data-access-key="{{ accessKey }}"
+    data-context-token="{{ context.token }}"
+>
+    <div class="card-title">Salesrep</div>
+
+    <div class="form-group">
+        <label class="form-label">Sales agent notes</label>
+        <textarea
+            id="salesrep-notes"
+            class="form-control sa-focusable"
+            rows="3"
+            placeholder="Write notes about this order..."
+        ></textarea>
+    </div>
+
+    <div class="form-group mt-2">
+        <label for="salesrep-do-not-ship" class="form-label">
+            Do not ship until after
+        </label>
+        <input
+            type="date"
+            id="salesrep-do-not-ship"
+            class="form-control sa-focusable"
+            min="{{ tomorrow }}"
+            placeholder="Select date"
+        >
+    </div>
+
+</div>
+{% endif %}
+
+<script>
+(function() {
+    console.log('[Salesrep] init cart note script');
+
+    const root = document.getElementById('salesrep-cart-note');
+    if (!root) {
+        console.log('[Salesrep] root container not found, aborting');
+        return;
+    }
+
+    const endpoint = root.dataset.endpoint;
+    const minDate = root.dataset.minDate;
+    const accessKey = root.dataset.accessKey;
+    const contextToken = root.dataset.contextToken;
+
+    const notesEl = document.getElementById('salesrep-notes');
+    const noSigEl = document.getElementById('salesrep-no-signature');
+    const dateEl = document.getElementById('salesrep-do-not-ship');
+    const saveBtn = document.getElementById('salesrep-save-btn');
+    const successEl = document.getElementById('salesrep-success');
+    const errorEl = document.getElementById('salesrep-error');
+
+    console.log('[Salesrep] endpoint:', endpoint);
+    console.log('[Salesrep] minDate:', minDate);
+    console.log('[Salesrep] accessKey:', accessKey ? 'present' : 'missing');
+    console.log('[Salesrep] contextToken:', contextToken ? 'present' : 'missing');
+
+    if (dateEl && minDate) {
+        dateEl.min = minDate;
+    }
+
+    const FOCUS_CLASS = 'sa-input-active';
+
+    function addFocusHandlers() {
+        const focusables = root.querySelectorAll('.sa-focusable');
+        console.log('[Salesrep] found focusables:', focusables.length);
+
+        focusables.forEach(function(el) {
+            el.addEventListener('focus', function() {
+                el.classList.add(FOCUS_CLASS);
+            });
+            el.addEventListener('blur', function() {
+                el.classList.remove(FOCUS_CLASS);
+            });
+            el.addEventListener('click', function() {
+                el.classList.add(FOCUS_CLASS);
+            });
+        });
+    }
+    addFocusHandlers();
+
+    function show(el) {
+        if (el) el.classList.remove('d-none');
+    }
+
+    function hide(el) {
+        if (el) el.classList.add('d-none');
+    }
+
+    // Build Infoplus-shaped payload
+    function buildPayload() {
+        const notes = notesEl ? notesEl.value : '';
+        const noSig = noSigEl ? noSigEl.checked : false;
+        let date  = dateEl ? dateEl.value : null;
+
+        if (date && minDate && date < minDate) {
+            console.warn('[Salesrep] chosen date < minDate, correcting', { chosen: date, minDate });
+            date = minDate;
+            if (dateEl) {
+                dateEl.value = minDate;
+            }
+        }
+
+        const payload = {
+            infoplus_salesrepOrderNotes: notes,
+            infoplus_salesrepNoSignatureRequired: noSig,
+            infoplus_salesrepDoNotShipUntil: date
+        };
+
+        console.log('[Salesrep] buildPayload()', payload);
+        return payload;
+    }
+
+    // POST to /store-api/salesrep/cart/note
+    function postSalesAgent(payload, done) {
+        console.log('[Salesrep] posting payload to', endpoint, payload);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        if (accessKey) {
+            xhr.setRequestHeader('sw-access-key', accessKey);
+        }
+        if (contextToken) {
+            xhr.setRequestHeader('sw-context-token', contextToken);
+        }
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+
+            const ok = xhr.status >= 200 && xhr.status < 300;
+            console.log('[Salesrep] XHR readyState=4, status=', xhr.status, 'ok=', ok);
+
+            if (ok) {
+                try {
+                    const res = JSON.parse(xhr.responseText || '{}');
+                    console.log('[Salesrep] response JSON:', res);
+                    if (res && res.success) {
+                        hide(errorEl);
+                        show(successEl);
+                    } else {
+                        console.warn('[Salesrep] success=false in response');
+                        hide(successEl);
+                        show(errorEl);
+                    }
+                } catch (e) {
+                    console.error('[Salesrep] failed to parse JSON response', e, xhr.responseText);
+                    hide(successEl);
+                    show(errorEl);
+                }
+            } else {
+                console.error('[Salesrep] request failed with status', xhr.status, xhr.responseText);
+                hide(successEl);
+                show(errorEl);
+            }
+
+            if (typeof done === 'function') {
+                done();
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error('[Salesrep] XHR network error');
+            hide(successEl);
+            show(errorEl);
+            if (typeof done === 'function') {
+                done();
+            }
+        };
+
+        xhr.send(JSON.stringify(payload));
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            console.log('[Salesrep] save button clicked');
+            const payload = buildPayload();
+            postSalesAgent(payload);
+        });
+    } else {
+        console.log('[Salesrep] save button not found (ok if you don\'t have one)');
+    }
+
+    // ---- Critical part: intercept native form.submit for confirmOrderForm ----
+    const nativeFormSubmit = HTMLFormElement.prototype.submit;
+
+    HTMLFormElement.prototype.submit = function(...args) {
+        try {
+            if (this.id === 'confirmOrderForm') {
+                // avoid infinite loop
+                if (!this._salesrepSynced) {
+                    this._salesrepSynced = true;
+
+                    console.log('[Salesrep] intercepted native form.submit() on #confirmOrderForm');
+
+                    const payload = buildPayload();
+
+                    postSalesAgent(payload, () => {
+                        const delayMs = 500;
+                        console.log('[Salesrep] POST finished, submitting form natively in', delayMs, 'ms');
+                        setTimeout(() => {
+                            console.log('[Salesrep] calling nativeFormSubmit() now');
+                            nativeFormSubmit.apply(this, args);
+                        }, delayMs);
+                    });
+
+                    // Important: do NOT submit immediately
+                    return;
+                } else {
+                    console.log('[Salesrep] native submit on #confirmOrderForm after sync, letting it pass');
+                }
+            }
+        } catch (e) {
+            console.error('[Salesrep] error in overridden form.submit()', e);
+        }
+
+        return nativeFormSubmit.apply(this, args);
+    };
+
+    console.log('[Salesrep] overridden HTMLFormElement.prototype.submit for confirmOrderForm');
+})();
+</script>
+
+
+
+
+<style>
+#salesrep-cart-note .sa-focusable {
+    border: 1px solid #dde5ee !important;
+    box-shadow: none;
+}
+
+#salesrep-cart-note .sa-input-active {
+    border: 1px solid #ab8355 !important;
+}
+</style>

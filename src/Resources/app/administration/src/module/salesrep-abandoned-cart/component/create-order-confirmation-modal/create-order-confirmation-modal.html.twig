@@ -1,0 +1,18 @@
+<sw-modal
+    v-if="visible"
+    :title="$tc('abandoned-cart-admin.modalTitleConfirmOrder')"
+    @modal-close="close"
+    {# class="custom-small-modal" #}
+    {# size="small" #}
+>
+    <p>{{ $tc('abandoned-cart-admin.messageConfirmCreateOrder') }}</p>
+
+    <template #modal-footer>
+        <sw-button @click="close" variant="ghost">
+            {{ $tc('abandoned-cart-admin.buttonCancel') }}
+        </sw-button>
+        <sw-button @click="confirm" variant="primary">
+            {{ $tc('abandoned-cart-admin.buttonConfirm') }}
+        </sw-button>
+    </template>
+</sw-modal>

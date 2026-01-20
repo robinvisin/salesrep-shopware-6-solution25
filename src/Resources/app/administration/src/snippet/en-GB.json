@@ -1,0 +1,196 @@
+{
+  "salesrep": {
+    "all-time-earnings": {
+      "title": "All-time Earnings",
+      "subtitle": "Overview of your total commissions across all time",
+      "lifetime-earnings": "Lifetime Commission",
+      "total-commission": "Total commission across all orders",
+      "commission-by-year": "Commission by Year",
+      "commission-by-month": "Commission Trend (This Month)",
+      "commission-by-year-tooltip": "Displays your total earned commission trend throughout the selected year.",
+      "download-all-data-btn": "Download All Data",
+      "select-year": "Select Year",
+      "kpiTitle": "Lifetime Commission",
+      "kpiSubtitle": "Total commission across all orders for your account",
+      "back-to-dashboard": "Back to Dashboard",
+      "error": {
+        "dataLoad": "Could not load earnings data. Please try again later.",
+        "chartLoad": "Could not load chart data. Please refresh or contact an administrator."
+      },
+      "notificationTitle": "Earnings Overview Error",
+      "csvDownloaded": "Earnings CSV successfully downloaded.",
+      "noDataAvailable": "No commission data available for the selected period."
+    },
+    "earnings": {
+      "kpiTitle": "Lifetime Commission",
+      "kpiSubtitle": "Total commission earned since joining",
+      "downloadCsv": "Download CSV Report"
+    },
+    "yearlyCommission": {
+      "title": "Commission Trend (This Month)",
+      "tooltip": "Shows monthly commission totals for the selected year",
+      "noData": "No commission data found for this year."
+    },
+    "dashboard": {
+      "customerColumns": {
+        "fullName": "Name",
+        "street": "Street",
+        "zipcode": "Postal Code",
+        "city": "City",
+        "customerNumber": "Customer Number",
+        "groupName": "Customer Group",
+        "email": "Email address"
+      },
+      "orderColumns": {
+        "orderNumber": "Order Number",
+        "fullName": "Customer Name",
+        "amountTotal": "Total",
+        "paymentMethod": "Payment Method",
+        "status": "Status",
+        "orderDate": "Order date",
+        "commissionAmount":"Commission Amount"
+      },
+      "error": {
+        "kpiLoad": "Could not load KPI data. Please try again later.",
+        "customerLoad": "Could not load customer data. Please try again later.",
+        "orderLoad": "Could not load order data. Please try again later.",
+        "generalError": "An error occurred while processing your request. Please try again later."
+      },
+      "notificationTitle": "Error",
+      "editPricing": "Edit Pricing",
+      "currentOrders": "Current Orders",
+      "linkedCustomers": "Linked Customers",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  },
+    "salesrep-claim-requests": {
+      "general": {
+        "mainMenuItemGeneral": "Claim requests",
+        "descriptionTextModule": "Approve/reject commission claim requests"
+      }
+    },
+  
+  "salesrep-settings": {
+    "general": {
+      "menuTitle": "Salesrep",
+      "moduleDescription": "Configure Salesrep Agent commissions and exclusions",
+      "save": "Save",
+      "salesChannel": "Sales channel",
+      "selectSalesChannel": "Select sales channel",
+      "configuration": "Configuration",
+      "user": "Select Agent User"
+    },
+    "fields": {
+      "excludedEmails": {
+        "label": "Excluded emails",
+        "help": "Comma-separated list of salesrep agent emails to exclude from commissions."
+      },
+      "commissionPercentage": {
+        "label": "Total commission percentage (%)",
+        "help": "Applied to eligible orders to compute total commission."
+      },
+      "discountLimit": {
+        "label": "Agent discount limit (%)",
+        "help": "Orders with a higher discount than this value are excluded from commissions."
+      }
+    }
+  },
+  "sw-privileges": {
+    "permissions": {
+      "easy_coupon_integration": {
+        "label": "Easy Coupon Integration"
+      },
+      "infoplus_id_mapping": {
+        "label": "InfoPlus ID mappings"
+      },
+      "lae_loyalty_points": {
+        "label": "Loyalty Points"
+      },
+      "salesrep": {
+        "label": "Salesrep"
+      },
+      "parents": {
+        "salesrep": "Salesrep"
+      },
+      "abandoned_cart": {
+        "label": "Abandoned carts"
+      },
+      "infoplus_field_definition": {
+        "label": "InfoPlus field definitions"
+      },
+      "infoplus_order_sync": {
+        "label": "InfoPlus order sync"
+      },
+      "order_light": {
+        "label": "Order (light access)"
+      },
+      "salesrep_commission": {
+        "label": "Salesrep agent commissions"
+      },
+      "salesrep_config": {
+        "label": "Salesrep agent configuration"
+      },
+      "media": {
+        "label": "Media"
+      },
+      "s25_taxjar_log": {
+        "label": "Tax Jar"
+      },
+      "store_credit": {
+        "label": "Store Cerdit"
+      },
+      "order_return_line_item": {
+        "label": "Order return line item"
+      },
+      "system_config": {
+        "label": "System configuration"
+      }
+    },
+    "additional_permissions": {
+      "salesrep": {
+        "label": "Salesrep",
+        "price_override": "Override prices"
+      }
+    }
+  },
+  "abandoned-cart-admin": {
+    "searchTypeLabel": "Abandoned Carts",
+    "searchPlaceholder": "Search Abandoned Carts…",
+    "modalTitleConfirmOrder": "Confirm Order Creation",
+    "messageConfirmCreateOrder": "Are you sure you want to create an order for this cart?",
+    "buttonCreateOrder": "Create Order",
+    "buttonCancel": "Cancel",
+    "buttonConfirm": "Confirm",
+    "items": "Items",
+    "viewLineItems": "View Line Items",
+    "delete": "Delete",
+    "modalTitleLineItems": "Cart Line Items",
+    "modalTitleConfirmDelete": "Confirm Deletion",
+    "messageConfirmDelete": "Are you sure you want to delete this abandoned cart?",
+    "cardTitleCustomerCarts": "Customer Carts",
+    "emptyStateNoCarts": "No carts available for this user.",
+    "emptyStateAddItemsInfo": "Once they add items, their carts will appear here.",
+    "columnName": "Full Name",
+    "columnEmail": "Email",
+    "columnPrice": "Price",
+    "coulmnCustomerId":"Customer Id",
+    "columnLineItemCount": "Line Item Count",
+    "columnCreatedAt": "Created At",
+    "columnActions": "Actions",
+    "lineItemColumnProduct": "Product",
+    "lineItemColumnQuantity": "Quantity",
+    "lineItemColumnUnitPrice": "Price",
+    "reminderModalTitle": "Send abandoned cart reminder",
+    "reminderTo": "Recipient",
+    "reminderIncludeItems": "Include cart items in the email",
+    "reminderNoteLabel": "Internal note",
+    "reminderNotePlaceholder": "Add a short message or note (optional)",
+    "reminderSendButton": "Send reminder"
+  },
+  "global": {
+    "entities": {
+      "salesrep_abandoned_cart": "Abandoned Carts | Abandoned Carts"
+    }
+  }
+}

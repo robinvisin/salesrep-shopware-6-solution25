@@ -1,0 +1,81 @@
+
+{
+    "salesrep": {
+      "dashboard": {
+        "customerColumns": {
+          "fullName": "Name",
+          "street": "Street",
+          "zipcode": "Postal Code",
+          "city": "City",
+          "customerNumber": "Customer Number",
+          "groupName": "Customer Group",
+          "email": "Email address"
+        },
+        "orderColumns": {
+          "orderNumber": "Order Number",
+          "fullName": "Customer Name",
+          "amountTotal": "Total",
+          "paymentMethod": "Payment Method",
+          "status": "Status",
+          "orderDate": "Order date"
+        },
+        "error": {
+          "kpiLoad": "Could not load KPI data. Please try again later.",
+          "customerLoad": "Could not load customer data. Please try again later.",
+          "orderLoad": "Could not load order data. Please try again later.",
+          "generalError": "An error occurred while processing your request. Please try again later."
+        },
+        "notificationTitle": "Error",
+        "editPricing": "Edit Pricing",
+        "currentOrders": "Current Orders",
+        "linkedCustomers": "Linked Customers",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "all-time-earnings": {
+        "lifetime-earnings": "Lifetime commission",
+        "total-commission": "Total commission across all orders",
+        "commission-by-year": "Commission by year",
+        "download-all-data-btn": "Download all data",
+        "select-year": "Year",
+        "back-to-dashboard": "Back to Dashboard",
+        "commission-by-month": "Commission Trend (This Month)",
+        "commission-by-year-tooltip": "Commission Trend (This Month)",
+        "kpiSubtitle":"Total commission across all orders for your account"
+      }
+    },
+      "salesrep-settings": {
+        "general": {
+          "menuTitle": "Salesrep ",
+          "moduleDescription": "Configure Salesrep Agent commissions and exclusions",
+          "save": "Save",
+          "salesChannel": "Sales channel",
+          "selectSalesChannel": "Select sales channel",
+          "configuration": "Configuration",
+          "user":"Select Agent User"
+        },
+        "fields": {
+          "excludedEmails": {
+            "label": "Excluded emails",
+            "help": "Comma-separated list of salesrep agent emails to exclude from commissions."
+          },
+          "commissionPercentage": {
+            "label": "Total commission percentage (%)",
+            "help": "Applied to eligible orders to compute total commission."
+          },
+          "discountLimit": {
+            "label": "Exclude when discount exceeds (%)",
+            "help": "Orders with a higher discount than this value are excluded from commissions."
+          }
+        }
+      },
+      "sw-privileges":{
+        "permissions":{
+           "salesrep": {
+             "label": "Salesrep"
+         }
+       }
+     }
+  }
+  
+  

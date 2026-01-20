@@ -1,0 +1,98 @@
+.salesrep-claim-request-list {
+
+  .sa-claim-smartbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .sa-claim-status {
+    width: 220px;
+    margin: 0;
+
+    .sw-field {
+      margin-bottom: 0; 
+    }
+  }
+
+
+  .sa-claim-grid-wrap {
+    padding: 0 20px 20px;
+  }
+
+  .sa-claim-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+
+  .sa-claim-note {
+    width: 260px;
+
+    .sw-field {
+      margin-bottom: 0;
+    }
+  }
+
+  .sa-claim-reason {
+    display: inline-block;
+    max-width: 520px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sa-claim-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    padding: 10px 20px 20px;
+  }
+
+  @media (max-width: 1200px) {
+    .sa-claim-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sa-claim-card {
+    padding: 16px 18px;
+    border-radius: 8px;
+    background: var(--color-white);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    // transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      // transform: translateY(-2px);
+    }
+  }
+
+  .sa-claim-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .label {
+      font-weight: 600;
+      color: var(--color-darkgray-200);
+      white-space: nowrap;
+    }
+
+    code {
+      font-size: 12px;
+      background: var(--color-gray-100);
+      padding: 2px 6px;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+  }
+}

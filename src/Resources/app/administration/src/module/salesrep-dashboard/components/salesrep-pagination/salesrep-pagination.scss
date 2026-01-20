@@ -1,0 +1,34 @@
+.salesrep-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 0;
+}
+
+.pagination-page,
+.pagination-arrow {
+    border: none;
+    background: none;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #3b5161;
+}
+
+.pagination-page.active {
+    background-color: #00a1ff;
+    color: #fff;
+}
+
+.pagination-page.ellipsis {
+    cursor: default;
+    color: #7b8794;
+}
+
+.pagination-arrow:disabled,
+.pagination-page:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}

@@ -1,0 +1,43 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Salesrep\Service;
+
+use Shopware\Core\Checkout\Order\OrderEntity;
+use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\Uuid\Uuid;
+
+final class ClaimedAgentResolver
+{
+    public function __construct(
+        private readonly EntityRepository $salesrepConfigRepo
+    ) {
+    }
+
+    public function resolveAgentUserIdForOrder(OrderEntity $order, Context $context): ?string
+    {
+        $cf = $order->getCustomFields() ?? [];
+
+        $claimedUserId = $cf['salesrep_claimed_user_id'] ?? null;
+        if (!\is_string($claimedUserId) || $claimedUserId === '' || !Uuid::isValid($claimedUserId)) {
+            return null;
+        }
+
+        $claimedAt = $cf['salesrep_claimed_at'] ?? null;
+        if (!\is_string($claimedAt) || $claimedAt === '') {
+            return null;
+        }
+
+        $criteria = (new Criteria())
+            ->addFilter(new EqualsFilter('userId', $claimedUserId))
+            ->setLimit(1);
+
+        $cfg = $this->salesrepConfigRepo->search($criteria, $context)->first();
+
+        return $cfg ? $claimedUserId : null;
+    }
+}

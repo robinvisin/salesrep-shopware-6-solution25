@@ -1,0 +1,80 @@
+<sw-page class="salesrep-dashboard" page-title="isAdminUser ? 'Sales Agents' : 'Sales Agent Dashboard'">
+    <template #smart-bar-actions>
+    <router-link class="sw-button sw-button--ghost" :to="{ name: 'salesrep.dashboard.earnings' }">
+      {{ $tc('View agents all-time earnings') }}
+    </router-link>
+  </template>
+  
+  <template #content>
+
+    <div v-if="isAdminUser">
+       <sw-data-grid
+        :dataSource="adminAgents"
+        :columns="adminAgentColumns"
+        :showSelection="false"
+        :isLoading="adminAgentsLoading"
+        :showActions="true">
+          <template #column-paid="{ item }">
+            <sw-badge v-if="isMonthPaid(item)" variant="success">Paid</sw-badge>
+            <sw-badge v-else variant="danger">Unpaid</sw-badge>
+          </template>
+
+          <template #actions="{ item }">
+            <sw-context-menu-item
+              v-if="!isMonthPaid(item)"
+              @click="onMarkAgentPaid(item)"
+            >
+              Mark paid (this month)
+            </sw-context-menu-item>
+
+            <sw-context-menu-item
+              v-else
+              disabled
+            >
+              Already paid
+            </sw-context-menu-item>
+          </template>
+
+          <template #column-commissionPct="{ item }">
+            {{ item.commissionPct }}%
+          </template>
+
+          <template #column-sales="{ item }">
+            {{ formatCurrency(item.sales) }}
+          </template>
+
+          <template #column-commission="{ item }">
+            {{ formatCurrency(item.commission) }}
+          </template>
+        </sw-data-grid>
+    </div>
+
+    <template style="margin-top:30px;"  v-else>
+      <div class="salesrep-dashboard__kpis" style="margin-top:30px;">
+        <salesrep-kpi-card title="Sales (This Month)" :value="kpi.sales" type="currency"/>
+        <salesrep-commission-chart title="Commission Trend (This Month)"/>
+      </div>
+
+      <salesrep-customers-grid
+        :customers="customers"
+        :columns="customerColumns"
+        :count="kpi.customers"
+        :loading="showCustomerSkeleton"
+        :page="customerPage"
+        :limit="customerLimit"
+        @pageChange="onCustomerPageChange"
+      />
+
+      <salesrep-orders-grid
+        :orders="orders"
+        :columns="orderColumns"
+        :count="kpi.orders"
+        :page="orderPage"
+        :limit="orderLimit"
+        @pageChange="onOrderPageChange"
+        :loading="showOrderSkeleton"
+      />
+    </template>
+
+  </template>
+</sw-page>

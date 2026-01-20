@@ -1,0 +1,292 @@
+<?xml version="1.0"?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="Salesrep\Storefront\Controller\SalesrepCartNoteController"
+        public="true">
+        <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService" />
+        <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister" />
+        <tag name="controller.service_arguments" />
+</service>
+<service id="Salesrep\Subscriber\SalesrepCartToOrderSubscriber">
+    <tag name="kernel.event_subscriber"/>
+</service>
+
+<service id="Salesrep\Controller\AbandonedCartReminderController" public="true">
+    <tag name="controller.service_arguments"/>
+
+    <argument type="service" id="salesrep_abandoned_cart.repository"/>
+    <argument type="service" id="customer.repository"/>
+    <argument type="service" id="sales_channel.repository"/>
+    <argument type="service" id="sales_channel_domain.repository"/>
+    <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory"/>
+    <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
+</service>
+    <!-- <service id="Salesrep\Subscriber\SalesrepNoteOrderSubscriber">
+        <argument type="service" id="order.repository" />
+        <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister" />
+        <tag name="kernel.event_subscriber" />
+    </service> -->
+
+    <service id="Salesrep\Controller\OrderClaimController" public="true">
+        <argument type="service" id="order.repository"/>
+        <argument type="service" id="Salesrep\Service\OrderCommissionRecalculator"/>
+        <call method="setContainer">
+            <argument type="service" id="service_container"/>
+        </call>
+        <tag name="controller.service_arguments"/>
+    </service>
+    <service id="Salesrep\Service\OrderClaimRequestService" public="true">
+        <argument type="service" id="order.repository"/>
+        <argument type="service" id="salesrep_order_claim_request.repository"/>
+        <argument type="service" id="salesrep_config.repository"/>
+        <argument type="service" id="Salesrep\Service\AgentResolver"/>
+        <argument type="service" id="Salesrep\Service\OrderCommissionRecalculator"/>
+    
+        <argument type="service" id="user.repository"/>
+        <argument type="service" id="Shopware\Core\Content\Mail\Service\MailService"/>
+        <argument type="service" id="logger"/>
+    </service>
+    
+    
+    <service id="Salesrep\Controller\OrderClaimRequestController" public="true">
+        <argument type="service" id="Salesrep\Service\OrderClaimRequestService"/>
+        <call method="setContainer">
+            <argument type="service" id="service_container"/>
+        </call>
+        <tag name="controller.service_arguments"/>
+    </service>
+
+    <!-- Resolve claimed agent (order customFields -> agentId) -->
+    <service id="Salesrep\Service\ClaimedAgentResolver">
+        <argument type="service" id="salesrep_config.repository"/>
+    </service>
+
+    <service id="Salesrep\Service\OrderCommissionRecalculator" public="true">
+        <argument type="service" id="order.repository"/>
+        <argument type="service" id="user.repository"/>
+        <argument type="service" id="salesrep_config.repository"/>
+        <argument type="service"  id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+        <argument type="service" id="Salesrep\Service\AgentResolver"/>
+        <argument type="service" id="Salesrep\Service\NumberResolver"/>
+        <argument type="service" id="Salesrep\Service\DiscountCalculator"/>
+        <argument type="service" id="Salesrep\Service\CommissionUpserter"/>
+        <argument type="service" id="Salesrep\Service\ClaimedAgentResolver"/>
+        <argument type="service" id="Doctrine\DBAL\Connection" />
+        </service>
+        <!-- Services-->
+        <service id="Salesrep\Service\AgentResolver" public="false">
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="salesrep_config.repository"/>
+            <argument type="service" id="user.repository"/>
+        </service>
+
+        <service id="Salesrep\Service\NumberResolver" public="false">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+        </service>
+
+        <service id="Salesrep\Service\DiscountCalculator" public="false">
+            <argument type="service" id="Salesrep\Service\NumberResolver"/>
+        </service>
+
+        <service id="Salesrep\Service\CommissionUpserter" public="false">
+            <argument type="service" id="salesrep_commission.repository"/>
+            <argument type="service" id="logger"/>
+        </service>
+
+        <service id="Salesrep\Core\Checkout\Cart\CustomCartProcessor">
+            <tag name="shopware.cart.processor"/>
+        </service>
+        <service id="Salesrep\Subscriber\SalesrepProductPriceOverrideSubscriber">
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        
+        <service id="Salesrep\Subscriber\CustomerLoginSubscriber">
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <!-- <service id="Salesrep\Subscriber\SalesrepHideOrdersWithHiddenCategorySubscriber">
+            <argument type="service" id="category.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="order.repository"/>
+            <argument type="service" id="logger"/>
+            <tag name="kernel.event_subscriber"/>
+        </service> -->
+        
+        
+        <service id="Salesrep\Core\Content\OrderClaimRequest\OrderClaimRequestDefinition" class="Salesrep\Core\Content\OrderClaimRequest\OrderClaimRequestDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+        <service id="Salesrep\Core\Content\SalesrepCommission\SalesrepCommissionDefinition" class="Salesrep\Core\Content\SalesrepCommission\SalesrepCommissionDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+      
+        <service id="Salesrep\Repository.SalesrepConfig" alias="salesrep_config.repository" />
+
+        <service id="Salesrep\Subscriber\OrderWrittenSubscriber">
+            <argument type="service" id="order.repository" />
+            <argument type="service" id="user.repository" />
+            <argument type="service" id="salesrep_config.repository" />
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="Salesrep\Service\AgentResolver" />
+            <argument type="service" id="Salesrep\Service\NumberResolver" />
+            <argument type="service" id="Salesrep\Service\DiscountCalculator" />
+            <argument type="service" id="Salesrep\Service\CommissionUpserter" />
+            <argument type="service" id="Doctrine\DBAL\Connection" />
+            <argument type="service" id="logger" />
+            <tag name="kernel.event_subscriber" />
+        </service>
+        <service id="Salesrep\Subscriber\SalesrepCategoryAccessSubscriber">
+            <argument type="service" id="category.repository"/>
+            <argument type="service" id="router"/>
+            <tag name="kernel.event_subscriber" />
+        </service>
+        <service id="Salesrep\Subscriber\SalesrepSearchAccessSubscriber">
+            <argument type="service" id="category.repository"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        <service id="Salesrep\Subscriber\CommercialReturnSubscriber">
+            <argument type="service" id="order.repository"/>
+            <argument type="service" id="order_line_item.repository"/>
+            <argument type="service" id="Salesrep\Service\CommissionUpserter"/>
+            <argument type="service" id="Doctrine\DBAL\Connection" />
+            <argument type="service" id="monolog.logger"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="Salesrep\Subscriber\StateTransitionSubscriber">
+            <argument type="service" id="Salesrep\Service\CommissionUpserter"/>
+            <argument type="service" id="order_transaction.repository"/>
+            <argument type="service" id="order_delivery.repository"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="Salesrep\Core\Content\SalesrepConfig\SalesrepConfigDefinition" class="Salesrep\Core\Content\SalesrepConfig\SalesrepConfigDefinition">
+            <tag name="shopware.entity.definition" entity="salesrep_config"/>
+        </service>
+        
+        <service id="Salesrep\Cart\SalesrepPriceProcessor">
+            <argument type="service" id="salesrep_config.repository"/>
+            <argument type="service" id="Shopware\Core\Checkout\Cart\Price\QuantityPriceCalculator"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <tag name="shopware.cart.processor" priority="-5500"/>
+        </service>
+        <service id="Salesrep\Cart\SalesrepShippingPriceProcessor">
+            <argument type="service" id="salesrep_config.repository"/>
+            <argument type="service" id="Shopware\Core\Checkout\Cart\Price\QuantityPriceCalculator"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <tag name="shopware.cart.processor" priority="-5000"/>
+        </service>
+        
+        <service id="Salesrep\Storefront\Controller\SalesrepPriceController">
+            <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
+            <argument type="service" id="salesrep_config.repository"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+            <tag name="controller.service_arguments"/>
+        </service>
+        <service id="Salesrep\Controller\SalesrepPayoutActionController" public="true">
+            <argument type="service" id="user.repository"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+            <tag name="controller.service_arguments"/>
+        </service>
+        
+        <service id="Salesrep\Storefront\Controller\SalesrepValidateSalesrepEmailRouteController" public="true">
+            <argument type="service" id="user.repository"/>
+            <!-- <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call> -->
+            <tag name="controller.service_arguments"/>
+        </service>
+        <service id="Salesrep\Storefront\Controller\SalesrepShippingController"
+         class="Salesrep\Storefront\Controller\SalesrepShippingController">
+           <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService" />
+            <argument type="service" id="salesrep_config.repository" />
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+            <tag name="controller.service_arguments"/>
+        </service>
+        
+        <service id="Salesrep\Subscriber\ConfirmPageSubscriber">
+            <argument type="service" id="salesrep_config.repository"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>        
+        <service id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartDefinition">
+            <tag name="shopware.entity.definition" entity="salesrep_abandoned_cart" />
+        </service>
+        <service id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager">
+            <argument type="service" id="Salesrep\Core\Checkout\Cart\CartRepository" />
+            <argument type="service" id="salesrep_abandoned_cart.repository" />
+        </service>
+            <!-- Commands -->
+    <service id="Salesrep\Command\DeleteAbandonedCartCommand">
+        <argument type="service" id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager" />
+        <tag name="console.command" />
+    </service>
+
+    <service id="Salesrep\Command\MarkAbandonedCartCommand">
+        <argument type="service" id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager" />
+        <tag name="console.command" />
+    </service>
+
+    <service id="Salesrep\Command\UpdateAbandonedCartCommand">
+        <argument type="service" id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager" />
+        <tag name="console.command" />
+    </service>
+    <service id="Salesrep\Core\Checkout\Cart\CartRepository">
+        <argument type="service" id="Doctrine\DBAL\Connection" />
+        <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+    </service>
+
+
+     <!-- ScheduledTask -->
+     <service id="Salesrep\Service\ScheduledTask\CancelUnpaidOrdersTask">
+        <tag name="shopware.scheduled.task" />
+    </service>
+    <service id="Salesrep\Service\ScheduledTask\CancelUnpaidOrdersTaskHandler">
+        <argument type="service" id="scheduled_task.repository"/>
+        <argument type="service" id="order_transaction.repository"/>
+        <argument type="service" id="Shopware\Core\System\StateMachine\StateMachineRegistry"/>
+        <tag name="messenger.message_handler"/>
+    </service>
+     <service id="Salesrep\Service\ScheduledTask\DeleteAbandonedCartTask">
+        <tag name="shopware.scheduled.task" />
+    </service>
+
+    <service id="Salesrep\Service\ScheduledTask\DeleteAbandonedCartTaskHandler">
+        <argument type="service" id="scheduled_task.repository" />
+        <argument type="service" id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager" />
+        <tag name="messenger.message_handler" />
+    </service>
+
+    <service id="Salesrep\Service\ScheduledTask\UpdateAbandonedCartTask">
+        <tag name="shopware.scheduled.task" />
+    </service>
+
+    <service id="Salesrep\Service\ScheduledTask\UpdateAbandonedCartTaskHandler">
+        <argument type="service" id="scheduled_task.repository" />
+        <argument type="service" id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager" />
+        <tag name="messenger.message_handler" />
+    </service>
+
+    <service id="Salesrep\Service\ScheduledTask\MarkAbandonedCartTask">
+        <tag name="shopware.scheduled.task" />
+    </service>
+
+    <service id="Salesrep\Service\ScheduledTask\MarkAbandonedCartTaskHandler">
+        <argument type="service" id="scheduled_task.repository" />
+        <argument type="service" id="Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager" />
+        <tag name="messenger.message_handler" />
+    </service>
+    </services>
+</container>

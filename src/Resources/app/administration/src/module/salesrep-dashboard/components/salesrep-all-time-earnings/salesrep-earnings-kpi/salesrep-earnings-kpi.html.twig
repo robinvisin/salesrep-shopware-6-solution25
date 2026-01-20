@@ -1,0 +1,28 @@
+<sw-card :title="title">
+  <template #title>
+    <div class="kpi-title-wrapper" style="display:flex; justify-content:space-between;">
+      <div class="kpi-title">Lifetime Sales</div>
+      <div class="kpi-title">Lifetime Commission</div>
+    </div>
+  </template>
+
+  <div class="kpi-wrapper" style="display:flex; flex-direction:column; gap:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="kpi-value" style="min-width:180px;">
+        <template v-if="!isLoading">{{ formattedSales }}</template>
+        <template v-else><div class="kpi-skeleton"></div></template>
+      </div>
+
+      <div class="kpi-value" style="min-width:180px;">
+        <template v-if="!isLoading">{{ formattedCommission }}</template>
+        <template v-else><div class="kpi-skeleton"></div></template>
+      </div>
+    </div>
+
+    <div style="margin-top:20px; text-align:right;">
+      <sw-button size="small" variant="ghost" :disabled="isLoading" @click="$emit('download')">
+        {{ isLoading ? 'Loading...' : 'Download all data' }}
+      </sw-button>
+    </div>
+  </div>
+</sw-card>
