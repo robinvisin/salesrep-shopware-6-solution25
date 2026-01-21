@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Salesrep\Subscriber;
 
 use Doctrine\DBAL\Connection;
-
 use Salesrep\Core\Content\SalesrepConfig\SalesrepConfigEntity;
 use Salesrep\Service\AgentResolver;
 use Salesrep\Service\CommissionUpserter;
@@ -43,16 +42,16 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
     private const CTX_STATE_SKIP = 'salesrep_skip_split_recompute';
 
     public function __construct(
-        private readonly EntityRepository    $orderRepository,
-        private readonly EntityRepository    $userRepository,
-        private readonly EntityRepository    $salesrepConfigRepository,
+        private readonly EntityRepository $orderRepository,
+        private readonly EntityRepository $userRepository,
+        private readonly EntityRepository $salesrepConfigRepository,
         private readonly SystemConfigService $systemConfig,
-        private readonly RequestStack        $requestStack,
-        private readonly AgentResolver       $agentResolver,
-        private readonly NumberResolver      $nums,
-        private readonly DiscountCalculator  $discounts,
-        private readonly CommissionUpserter  $upserter,
-        private readonly Connection          $connection,
+        private readonly RequestStack $requestStack,
+        private readonly AgentResolver $agentResolver,
+        private readonly NumberResolver $nums,
+        private readonly DiscountCalculator $discounts,
+        private readonly CommissionUpserter $upserter,
+        private readonly Connection $connection,
     ) {
     }
 
@@ -87,10 +86,12 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         foreach ($event->getWriteResults() as $wr) {
             $op = $wr->getOperation();
 
-            if (!\in_array($op, [
+            if (
+                !\in_array($op, [
                 EntityWriteResult::OPERATION_INSERT,
                 EntityWriteResult::OPERATION_UPDATE,
-            ], true)) {
+                ], true)
+            ) {
                 continue;
             }
 

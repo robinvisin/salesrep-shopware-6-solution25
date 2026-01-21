@@ -28,16 +28,16 @@ final class OrderCommissionRecalculator
     private const CF_CLAIMED_AT      = 'salesrep_claimed_at';
 
     public function __construct(
-        private readonly EntityRepository    $orderRepo,
-        private readonly EntityRepository    $userRepo,
-        private readonly EntityRepository    $salesrepConfigRepo,
+        private readonly EntityRepository $orderRepo,
+        private readonly EntityRepository $userRepo,
+        private readonly EntityRepository $salesrepConfigRepo,
         private readonly SystemConfigService $systemConfig,
-        private readonly AgentResolver       $agentResolver,
-        private readonly NumberResolver      $nums,
-        private readonly DiscountCalculator  $discounts,
-        private readonly CommissionUpserter  $upserter,
+        private readonly AgentResolver $agentResolver,
+        private readonly NumberResolver $nums,
+        private readonly DiscountCalculator $discounts,
+        private readonly CommissionUpserter $upserter,
         private readonly ClaimedAgentResolver $claimedAgentResolver,
-        private readonly Connection          $connection
+        private readonly Connection $connection
     ) {
     }
 

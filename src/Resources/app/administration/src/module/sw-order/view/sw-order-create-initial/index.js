@@ -6,13 +6,13 @@ const resetSwOrderStateHard = async () => {
     try {
         await State.dispatch('swOrder/resetState');
         return;
-    } catch (e) {}
+    } catch (e) {console.warn(e)}
 
-    try { State.commit('swOrder/setCustomer', null); } catch {}
-    try { State.commit('swOrder/setCart', null); } catch {}
-    try { State.commit('swOrder/setCartLineItems', []); } catch {}
-    try { State.commit('swOrder/setContextToken', null); } catch {}
-    try { State.commit('swOrder/setSalesChannelId', null); } catch {}
+    try { State.commit('swOrder/setCustomer', null); } catch(e) {console.warn(e)}
+    try { State.commit('swOrder/setCart', null); } catch(e) {console.warn(e)}
+    try { State.commit('swOrder/setCartLineItems', []); } catch(e) {console.warn(e)}
+    try { State.commit('swOrder/setContextToken', null); } catch(e) {console.warn(e)}
+    try { State.commit('swOrder/setSalesChannelId', null); } catch(e) {console.warn(e)}
 };
 
 Component.override('sw-order-create-initial', {
@@ -55,7 +55,7 @@ Component.override('sw-order-create-initial', {
             try {
                 Abandoned.enableClear();
                 Abandoned.clear();
-            } catch (e) {}
+            } catch (e) {console.warn(e)}
 
             await resetSwOrderStateHard();
         },

@@ -48,7 +48,6 @@ final class Migration1734880000CreateOrderClaimRequest extends MigrationStep
             ON DELETE SET NULL ON UPDATE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         SQL);
-
     }
 
     public function updateDestructive(Connection $connection): void

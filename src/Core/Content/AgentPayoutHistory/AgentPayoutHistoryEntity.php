@@ -89,5 +89,4 @@ class AgentPayoutHistoryEntity extends Entity
     {
         $this->salesrep = $salesrep;
     }
-
 }

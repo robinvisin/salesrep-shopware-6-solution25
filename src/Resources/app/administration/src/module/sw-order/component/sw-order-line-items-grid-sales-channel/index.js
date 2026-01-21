@@ -92,7 +92,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     },
 },
   beforeDestroy() {
-    try { if (typeof this.__unsubscribeSw === 'function') this.__unsubscribeSw(); } catch {}
+    try { if (typeof this.__unsubscribeSw === 'function') this.__unsubscribeSw(); } catch(e) {console.warn('[AbandonedMini] unsubscribe error:', e);}
   },
 
   methods: {
@@ -354,7 +354,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     
       try {
         await State.dispatch('swOrder/loadCart', { salesChannelId: scId });
-      } catch (e) {}
+      } catch (e) {console.warn('[AbandonedMini] loadCart error:', e);}
     
       this.__rebuildLiMapFromCart(State.get('swOrder')?.cartLineItems || []);
     
@@ -393,10 +393,10 @@ Component.override('sw-order-line-items-grid-sales-channel', {
             const newToken = res?.token || res?.contextToken;
             if (newToken) {
               token = newToken;
-              try { State.commit('swOrder/setContextToken', newToken); } catch {}
+              try { State.commit('swOrder/setContextToken', newToken); } catch(e) {console.warn('[AbandonedMini] setContextToken error:', e);}
             }
           }
-        } catch { }
+        } catch(e) {console.warn('[AbandonedMini] createCart error:', e); }
       }
 
       token =

@@ -1,6 +1,6 @@
-import Plugin from 'src/plugin-system/plugin.class';
+const PluginBaseClass = window.PluginBaseClass;
 
-export default class SalesrepPriceEditorPlugin extends Plugin {
+export default class SalesrepPriceEditorPlugin extends PluginBaseClass {
   init() {
     this.input   = this.el.querySelector('.js-sa-price-input');
     this.apply   = this.el.querySelector('.js-sa-apply');
@@ -42,7 +42,7 @@ export default class SalesrepPriceEditorPlugin extends Plugin {
       });
       if (!resp.ok) {
         let msg = 'Failed to apply discount.';
-        try { const j = await resp.json(); if (j?.error) msg = j.error; } catch {}
+        try { const j = await resp.json(); if (j?.error) msg = j.error; } catch(e) {console.warn(e)}
         return this.showError(msg);
       }
       window.location.reload();

@@ -17,7 +17,6 @@ class CommissionValidatorService
 
     public function isOrderCommissionValid(OrderEntity $order, $agentId)
     {
-
     }
 
     public function setSessionValues(Request $request)

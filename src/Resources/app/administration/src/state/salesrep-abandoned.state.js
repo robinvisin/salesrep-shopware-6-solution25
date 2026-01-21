@@ -8,7 +8,9 @@ function writePersisted(val) {
   try {
     if (val == null) sessionStorage.removeItem(KEY);
     else sessionStorage.setItem(KEY, JSON.stringify(val));
-  } catch {}
+  } catch(e) {
+    console.warn('[SalesRep Abandoned] Failed to persist abandoned cart:', e);
+  }
 }
 
 function nowIso() { return new Date().toISOString(); }
@@ -16,7 +18,7 @@ function nowIso() { return new Date().toISOString(); }
 export function ensureAbandonedStore() {
   const S = Shopware?.State;
   if (!S) return;
-  try { if (S.get(NS)) return; } catch (_) {}
+  try { if (S.get(NS)) return; } catch (e) {console.warn('[SalesRep Abandoned] Failed to get abandoned cart state:', e);}
   S.registerModule(NS, {
     namespaced: true,
     state: () => ({

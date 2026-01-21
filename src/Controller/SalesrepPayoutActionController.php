@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Salesrep\Controller;
 
@@ -17,7 +19,8 @@ class SalesrepPayoutActionController extends AbstractController
 {
     public function __construct(
         private readonly EntityRepository $userRepository
-    ) {}
+    ) {
+    }
 
     #[Route(
         path: '/api/_action/salesrep/agents/mark-paid',
@@ -42,7 +45,7 @@ class SalesrepPayoutActionController extends AbstractController
 
         $source = $context->getSource();
         $paidBy = $source instanceof AdminApiSource ? $source->getUserId() : null;
-    
+
         $payload = [
             'id' => $agentId,
             'customFields' => [
@@ -60,11 +63,11 @@ class SalesrepPayoutActionController extends AbstractController
                 ],
             ],
         ];
-    
+
         $context->scope(Context::SYSTEM_SCOPE, function (Context $scoped) use ($payload) {
             $this->userRepository->upsert([$payload], $scoped);
         });
-    
+
         return new JsonResponse(['success' => true]);
     }
 }

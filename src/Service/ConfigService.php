@@ -24,5 +24,4 @@ class ConfigService
     {
         $this->configService->set('AbandonedCartAdmin.config.markAbandonedAfter', $seconds);
     }
-
 }

@@ -82,7 +82,7 @@ Component.override('sw-order-create', {
 
           await repo.save(order, Shopware.Context.api);
 
-          console.log('[SplitCommission] persisted split on order (from response):', {
+          console.warn('[SplitCommission] persisted split on order (from response):', {
             orderId,
             ...split,
           });
@@ -105,7 +105,7 @@ Component.override('sw-order-create', {
         const split = readSplitFromState();
         this.__lastSplit = split;
 
-        console.log('[OrderCreate] split captured:', split);
+        console.warn('[OrderCreate] split captured:', split);
 
         return await this.$super('onSaveOrder');
       } finally {

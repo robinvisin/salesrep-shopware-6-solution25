@@ -126,9 +126,9 @@ Component.register('salesrep-dashboard-list', {
         try {
           const range = this.salesrepAgentService.getThisMonthRange();
           const rows = await this.salesrepAgentService.fetchAgentsWithMonthlyTotals(range);
-      
-          console.log('[AdminAgents] rows length:', rows?.length, rows);
-          console.log('[AdminAgents] ids:', rows?.map(r => r.id));
+
+          console.warn('[AdminAgents] rows length:', rows?.length, rows);
+          console.warn('[AdminAgents] ids:', rows?.map(r => r.id));
       
           this.adminAgents = rows;
         } catch (e) {

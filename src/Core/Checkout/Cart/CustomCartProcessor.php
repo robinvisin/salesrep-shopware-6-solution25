@@ -14,6 +14,5 @@ class CustomCartProcessor implements CartProcessorInterface
 {
     public function process(CartDataCollection $data, Cart $original, Cart $toCalculate, SalesChannelContext $context, CartBehavior $behavior): void
     {
-
     }
 }

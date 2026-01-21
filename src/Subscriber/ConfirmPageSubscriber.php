@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Salesrep\Subscriber;
 
-use Salesrep\Core\Content\SalesAgentConfig\SalesrepConfigEntity;
+use Salesrep\Core\Content\SalesrepConfig\SalesrepConfigEntity;
 use Shopware\Core\Checkout\Payment\PaymentMethodCollection;
 use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -19,7 +19,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 final class ConfirmPageSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly EntityRepository    $salesrepConfigRepository,
+        private readonly EntityRepository $salesrepConfigRepository,
         private readonly SystemConfigService $systemConfig
     ) {
     }

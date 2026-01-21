@@ -25,7 +25,5 @@ class CustomerLoginSubscriber implements EventSubscriberInterface
 
     public function onCustomerBeforeLogin(CustomerBeforeLoginEvent $event): void
     {
-
     }
-
 }

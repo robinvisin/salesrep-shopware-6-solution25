@@ -356,7 +356,7 @@ Component.register('salesrep-all-time-earnings', {
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
           
-              const safeName = (agent?.username || agentId).replace(/[^\w\-]+/g, '_');
+              const safeName = (agent?.username || agentId).replace(/[^\w]+/g, '_');
               const link = document.createElement('a');
               link.href = url;
               link.download = `all_time_earnings_${safeName}.csv`;

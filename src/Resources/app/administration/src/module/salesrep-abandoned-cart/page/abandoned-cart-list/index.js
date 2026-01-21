@@ -209,11 +209,11 @@ Component.register('abandoned-cart-list', {
       try {
         await Shopware.State.dispatch('swOrder/resetState');
       } catch (e) {
-        try { Shopware.State.commit('swOrder/setCustomer', null); } catch {}
-        try { Shopware.State.commit('swOrder/setCart', null); } catch {}
-        try { Shopware.State.commit('swOrder/setCartLineItems', []); } catch {}
-        try { Shopware.State.commit('swOrder/setContextToken', null); } catch {}
-        try { Shopware.State.commit('swOrder/setSalesChannelId', null); } catch {}
+        try { Shopware.State.commit('swOrder/setCustomer', null); } catch(e) {console.error(e)}
+        try { Shopware.State.commit('swOrder/setCart', null); } catch(e) {console.error(e)}
+        try { Shopware.State.commit('swOrder/setCartLineItems', []); } catch(e) {console.error(e)}
+        try { Shopware.State.commit('swOrder/setContextToken', null); } catch(e) {console.error(e)}
+        try { Shopware.State.commit('swOrder/setSalesChannelId', null); } catch(e) {console.error(e)}
       }
 
       Abandoned.disableClear();

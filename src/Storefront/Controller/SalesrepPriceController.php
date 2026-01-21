@@ -22,8 +22,8 @@ use Symfony\Component\Routing\Annotation\Route;
 final class SalesrepPriceController extends StorefrontController
 {
     public function __construct(
-        private readonly CartService         $cartService,
-        private readonly EntityRepository    $salesrepConfigRepository,
+        private readonly CartService $cartService,
+        private readonly EntityRepository $salesrepConfigRepository,
         private readonly SystemConfigService $systemConfig,
     ) {
     }

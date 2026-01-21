@@ -1,5 +1,5 @@
 <?php
-
+// phpcs:ignoreFile
 declare(strict_types=1);
 
 namespace Salesrep\Cart;
@@ -25,18 +25,18 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 final class SalesrepPriceProcessor implements CartProcessorInterface
 {
     public function __construct(
-        private readonly EntityRepository        $salesrepConfigRepository,
+        private readonly EntityRepository $salesrepConfigRepository,
         private readonly QuantityPriceCalculator $calculator,
-        private readonly SystemConfigService     $systemConfig
+        private readonly SystemConfigService $systemConfig
     ) {
     }
 
     public function process(
-        CartDataCollection  $data,
-        Cart                $original,
-        Cart                $toCalculate,
+        CartDataCollection $data,
+        Cart $original,
+        Cart $toCalculate,
         SalesChannelContext $context,
-        CartBehavior        $behavior
+        CartBehavior $behavior
     ): void {
         $agentId = $this->resolveActingUserId($context);
         if ($agentId === null) {
@@ -167,9 +167,8 @@ final class SalesrepPriceProcessor implements CartProcessorInterface
 
     private function resolveActingUserId(SalesChannelContext $sc): ?string
     {
-        $impersonated = $sc->getImitatingUserId();
-        if ($impersonated) {
-            return (string)$impersonated;
+        if ($sc->getImitatingUserId()) {
+            return $sc->getImitatingUserId();
         }
 
         $src = $sc->getContext()->getSource();
@@ -220,9 +219,9 @@ final class SalesrepPriceProcessor implements CartProcessorInterface
 final class SalesrepPriceLimitError extends Error
 {
     public function __construct(
-        private readonly float  $limitPercent,
-        private readonly float  $originalUnit,
-        private readonly float  $minAllowed,
+        private readonly float $limitPercent,
+        private readonly float $originalUnit,
+        private readonly float $minAllowed,
         private readonly string $label
     ) {
     }

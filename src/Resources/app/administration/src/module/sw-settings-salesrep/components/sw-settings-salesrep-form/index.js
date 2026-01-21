@@ -183,7 +183,8 @@ Component.register('sw-settings-salesrep-form', {
             this.cfFilterValue = cand.value;
             return;
           }
-        } catch {
+        } catch(e) {
+          console.warn(e)
         }
       }
 

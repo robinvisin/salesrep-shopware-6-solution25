@@ -34,7 +34,6 @@ final class OrderClaimRequestService
         private readonly EntityRepository $salesrepConfigRepo,
         private readonly AgentResolver $agentResolver,
         private readonly OrderCommissionRecalculator $recalculator,
-
         // email deps
         private readonly EntityRepository $userRepo,
         private readonly AbstractMailService $mailService,

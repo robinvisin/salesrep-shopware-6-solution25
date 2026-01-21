@@ -3,12 +3,11 @@ import './index.scss';
 
 Component.override('sw-admin-menu', {
     created() {
-        console.log('[SalesrepUI] sw-admin-menu created');
 
         this.__unwatchSalesAgentUser = this.$store.watch(
             (state) => state?.session?.currentUser,
             (user, prev) => {
-                console.log('[SalesrepUI] session.currentUser changed', {
+                console.warn('[SalesrepUI] session.currentUser changed', {
                     prevUserId: prev?.id,
                     nextUserId: user?.id,
                     nextEmail: user?.email,
@@ -21,7 +20,6 @@ Component.override('sw-admin-menu', {
     },
 
     beforeDestroy() {
-        console.log('[SalesrepUI] sw-admin-menu beforeDestroy');
 
         if (typeof this.__unwatchSalesAgentUser === 'function') {
             this.__unwatchSalesAgentUser();
@@ -39,7 +37,7 @@ Component.override('sw-admin-menu', {
                 State.get('session')?.currentUser ||
                 this.$store?.state?.session?.currentUser;
 
-            console.log('[SalesAgentUI] __getCurrentUser()', {
+            console.warn('[SalesAgentUI] __getCurrentUser()', {
                 id: user?.id,
                 email: user?.email,
                 hasCustomFields: !!user?.customFields,
@@ -53,7 +51,6 @@ Component.override('sw-admin-menu', {
 
         __isSalesAgentUser(user) {
             const isAgent = !!user?.customFields?.is_salesrep;
-            console.log('[SalesAgentUI] __isSalesAgentUser', { isAgent });
             return isAgent;
         },
 
@@ -67,7 +64,7 @@ Component.override('sw-admin-menu', {
 
             const list = Array.isArray(roles) ? roles : [];
 
-            console.log('[SalesAgentUI] __getUserRoles', {
+            console.warn('[SalesAgentUI] __getUserRoles', {
                 rawType: Array.isArray(roles) ? 'array' : typeof roles,
                 count: list.length,
                 names: list
@@ -85,7 +82,7 @@ Component.override('sw-admin-menu', {
 
             const match = !!name && name.includes('sales') && name.includes('agent');
 
-            console.log('[SalesAgentUI] __isSalesAgentRole', {
+            console.warn('[SalesAgentUI] __isSalesAgentRole', {
                 roleName: role?.name || role?.label || role?.title || null,
                 match,
             });
@@ -97,14 +94,12 @@ Component.override('sw-admin-menu', {
             const user = this.__getCurrentUser();
 
             if (!this.__isSalesAgentUser(user)) {
-                console.log('[SalesAgentUI] restrict=false (not sales agent)');
                 return false;
             }
 
             const roles = this.__getUserRoles(user);
 
             if (!roles.length) {
-                console.log('[SalesAgentUI] restrict=true (roles not loaded / empty)');
                 return true;
             }
 
@@ -117,7 +112,7 @@ Component.override('sw-admin-menu', {
 
                 if (hasName) {
                     const nonSalesAgent = !this.__isSalesAgentRole(r);
-                    console.log('[SalesAgentUI] role check (named)', {
+                    console.warn('[SalesAgentUI] role check (named)', {
                         role: r.name || r.label || r.title,
                         nonSalesAgent,
                     });
@@ -126,7 +121,7 @@ Component.override('sw-admin-menu', {
 
                 // unknown shape (id string etc.)
                 const nonSalesAgent = roles.length > 1;
-                console.log('[SalesAgentUI] role check (unknown shape)', {
+                console.warn('[SalesAgentUI] role check (unknown shape)', {
                     role: r,
                     nonSalesAgent,
                 });
@@ -135,7 +130,7 @@ Component.override('sw-admin-menu', {
 
             const restrict = !hasNonSalesAgentRole;
 
-            console.log('[SalesAgentUI] __shouldApplySalesAgentRestrictions result', {
+            console.warn('[SalesAgentUI] __shouldApplySalesAgentRestrictions result', {
                 hasNonSalesAgentRole,
                 restrict,
             });
@@ -150,7 +145,7 @@ Component.override('sw-admin-menu', {
             document?.body?.classList.toggle('is-salesrep', restrict);
             const after = document?.body?.classList.contains('is-salesrep');
 
-            console.log('[SalesAgentUI] body class toggle', {
+            console.warn('[SalesAgentUI] body class toggle', {
                 restrict,
                 before,
                 after,

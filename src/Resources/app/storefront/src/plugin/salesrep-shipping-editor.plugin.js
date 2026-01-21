@@ -1,6 +1,6 @@
-import Plugin from 'src/plugin-system/plugin.class';
+const PluginBaseClass = window.PluginBaseClass;
 
-export default class SalesrepShippingEditorPlugin extends Plugin {
+export default class SalesrepShippingEditorPlugin extends PluginBaseClass {
   init() {
     this.input   = this.el.querySelector('.js-sa-shipping-input');
     this.apply   = this.el.querySelector('.js-sa-shipping-apply');
@@ -67,7 +67,9 @@ export default class SalesrepShippingEditorPlugin extends Plugin {
         try {
           const j = await resp.json();
           if (j?.error) msg = j.error;
-        } catch {}
+        } catch(e) {
+          console.warn(e);
+        }
         return this.showError(msg);
       }
 
