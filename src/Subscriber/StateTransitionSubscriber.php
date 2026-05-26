@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Subscriber;
+namespace SalesAgent\Subscriber;
 
-use Salesrep\Service\CommissionUpserter;
+use SalesAgent\Service\CommissionUpserter;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryStates;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
@@ -44,14 +44,12 @@ final class StateTransitionSubscriber implements EventSubscriberInterface
         }
 
         if ($entity === 'order_transaction') {
-            if (
-                \in_array($toTech, [
+            if (\in_array($toTech, [
                 OrderTransactionStates::STATE_FAILED,
                 OrderTransactionStates::STATE_CANCELLED,
                 OrderTransactionStates::STATE_REFUNDED,
                 OrderTransactionStates::STATE_PARTIALLY_REFUNDED,
-                ], true)
-            ) {
+            ], true)) {
                 if ($orderId = $this->resolveOrderIdFromTransaction($event->getEntityId(), $ctx)) {
                     $this->revokeCommission($orderId, $ctx);
                 }
@@ -60,13 +58,11 @@ final class StateTransitionSubscriber implements EventSubscriberInterface
         }
 
         if ($entity === 'order_delivery') {
-            if (
-                \in_array($toTech, [
+            if (\in_array($toTech, [
                 OrderDeliveryStates::STATE_RETURNED,
                 OrderDeliveryStates::STATE_PARTIALLY_RETURNED,
                 OrderDeliveryStates::STATE_CANCELLED,
-                ], true)
-            ) {
+            ], true)) {
                 if ($orderId = $this->resolveOrderIdFromDelivery($event->getEntityId(), $ctx)) {
                     $this->revokeCommission($orderId, $ctx);
                 }

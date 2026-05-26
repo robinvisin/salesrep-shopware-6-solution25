@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Migration;
+namespace SalesAgent\Migration;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
@@ -17,7 +17,7 @@ class Migration1739988888AddCommissionAmount extends MigrationStep
     public function update(Connection $connection): void
     {
         $connection->executeStatement('
-            ALTER TABLE `salesrep_commission`
+            ALTER TABLE `sales_agent_commission`
             ADD COLUMN `commission_amount` DOUBLE NOT NULL DEFAULT 0 AFTER `commission_percent_applied`;
         ');
     }

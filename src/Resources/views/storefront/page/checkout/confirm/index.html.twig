@@ -1,6 +1,11 @@
 {% sw_extends '@Storefront/storefront/page/checkout/confirm/index.html.twig' %}
 
-{# keep your line-item + price editor injection #}
+{% set isAgent =
+    (context.imitatingUserId is defined and context.imitatingUserId)
+    or (context.customer and context.customer.customFields is defined
+    and (context.customer.customFields.sales_agent ?? false) in [true, 1, '1'])
+%}
+
 {% block page_checkout_confirm_table_items %}
     {% for lineItem in page.cart.lineItems %}
         {% block page_checkout_confirm_table_item %}
@@ -9,11 +14,29 @@
                 showTaxPrice: true
             } %}
 
-            {% sw_include '@Salesrep/salesrep/price-editor/price-editor.html.twig' with {
+            {% sw_include '@SalesAgent/sales-agent/price-editor/price-editor.html.twig' with {
                 lineItem: lineItem,
                 cart: page.cart
             } %}
         {% endblock %}
     {% endfor %}
+
+    {% if isAgent %}
+        {% sw_include '@SalesAgent/storefront/component/sales-agent-cart-note.html.twig' %}
+    {% endif %}
 {% endblock %}
 
+
+{% block page_checkout_confirm_tos_control_checkbox %}
+    <input type="checkbox"
+           class="checkout-confirm-tos-checkbox form-check-input{% if formViolations.getViolations('/tos') is not empty %} is-invalid{% endif %}"
+           required="required"
+            {% if(isAgent) %} checked disabled{% endif %}
+           id="tos"
+           form="confirmOrderForm"
+           name="tos">
+
+    {% if isAgent %}
+        <input type="hidden" name="tos" value="1" form="confirmOrderForm">
+    {% endif %}
+{% endblock %}

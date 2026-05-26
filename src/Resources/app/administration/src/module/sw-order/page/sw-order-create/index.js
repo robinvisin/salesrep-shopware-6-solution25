@@ -1,8 +1,6 @@
 import template from './sw-order-create.html.twig';
 
-const { Component, State, Application } = Shopware;
-
-const FLAG = '__splitOrderIdInterceptorInstalled';
+const { Component, State } = Shopware;
 
 function normalizePercent(v) {
   const n = Number(v ?? 0);
@@ -13,21 +11,9 @@ function readSplitFromState() {
   const cart = State.get('swOrder')?.cart || null;
   const cf = cart?.customFields || {};
   return {
-    email: (cf.salesrep_split_email || '').trim(),
-    percent: normalizePercent(cf.salesrep_split_percent),
+    email: (cf.sales_agent_split_email || '').trim(),
+    percent: normalizePercent(cf.sales_agent_split_percent),
   };
-}
-
-function extractOrderIdFromAnyResponse(resp) {
-  // common shapes
-  return (
-    resp?.data?.id ||
-    resp?.data?.orderId ||
-    resp?.data?.order?.id ||
-    resp?.data?.data?.id ||
-    resp?.data?.data?.orderId ||
-    null
-  );
 }
 
 Component.override('sw-order-create', {
@@ -42,56 +28,23 @@ Component.override('sw-order-create', {
   },
 
   created() {
-    this.installCreateOrderResponseHook();
+    this.resetSplitInCartState();
+    this.__lastSplit = { email: '', percent: 0 };
   },
 
   methods: {
-    installCreateOrderResponseHook() {
-      const init = Application.getContainer('init');
-      const http = init?.httpClient;
-      if (!http?.interceptors?.response) return;
+    resetSplitInCartState() {
+      const cart = State.get('swOrder')?.cart || null;
+      if (!cart) return;
 
-      if (http[FLAG]) return;
-      http[FLAG] = true;
-
-      http.interceptors.response.use(async (resp) => {
-        const url = String(resp?.config?.url || '');
-        const method = String(resp?.config?.method || '').toLowerCase();
-
-        // We only care about the actual "create order" request.
-        // This match is intentionally broad; tighten it once you see the real URL in logs.
-        const looksLikeCreate =
-          method === 'post' &&
-          (url.includes('/_action/order') || url.includes('/order') || url.includes('create'));
-
-        if (!looksLikeCreate) return resp;
-
-        const orderId = extractOrderIdFromAnyResponse(resp);
-        if (!orderId) return resp;
-
-        const split = this.__lastSplit;
-        if (!split?.email && !split?.percent) return resp;
-
-        try {
-          const repo = this.repositoryFactory.create('order');
-          const order = await repo.get(orderId, Shopware.Context.api);
-
-          order.customFields = order.customFields || {};
-          order.customFields.salesrep_split_email = split.email;
-          order.customFields.salesrep_split_percent = split.percent;
-
-          await repo.save(order, Shopware.Context.api);
-
-          console.warn('[SplitCommission] persisted split on order (from response):', {
-            orderId,
-            ...split,
-          });
-        } catch (e) {
-          console.error('[SplitCommission] failed persisting split on order', e);
-        }
-
-        return resp;
-      }, (err) => Promise.reject(err));
+      State.commit('swOrder/setCart', {
+        ...cart,
+        customFields: {
+          ...(cart.customFields || {}),
+          sales_agent_split_email: '',
+          sales_agent_split_percent: 0,
+        },
+      });
     },
 
     async onSaveOrder() {
@@ -105,9 +58,30 @@ Component.override('sw-order-create', {
         const split = readSplitFromState();
         this.__lastSplit = split;
 
-        console.warn('[OrderCreate] split captured:', split);
+        console.log('[OrderCreate] split captured:', split);
 
-        return await this.$super('onSaveOrder');
+        const result = await this.$super('onSaveOrder');
+
+        const orderId = this.orderId || null;
+        if (orderId && (split?.email || split?.percent)) {
+          try {
+            const repo = this.repositoryFactory.create('order');
+            const order = await repo.get(orderId, Shopware.Context.api);
+
+            order.customFields = order.customFields || {};
+            order.customFields.sales_agent_split_email = split.email;
+            order.customFields.sales_agent_split_percent = split.percent;
+
+            await repo.save(order, Shopware.Context.api);
+          } catch (e) {
+            console.error('[SplitCommission] failed persisting split on order', e);
+          }
+        }
+
+        this.resetSplitInCartState();
+        this.__lastSplit = { email: '', percent: 0 };
+
+        return result;
       } finally {
         this.__saving = false;
       }

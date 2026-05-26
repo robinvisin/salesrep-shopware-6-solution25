@@ -22,7 +22,6 @@ Component.register('sw-order-detail-notes', {
         return {
             order: null,
             note: '',
-            noSignatureRequired: false,
             doNotShipUntil: null,
             isLoading: false,
             isSaving: false,
@@ -82,10 +81,9 @@ Component.register('sw-order-detail-notes', {
 
                 const cf = order.customFields || {};
 
-                this.note = cf.infoplus_salesrepOrderNotes || '';
-                this.noSignatureRequired = !!cf.infoplus_salesrepNoSignatureRequired;
+                this.note = cf.infoplus_salesAgentOrderNotes || '';
 
-                const savedDate = cf.infoplus_salesrepDoNotShipUntil || null;
+                const savedDate = cf.infoplus_salesAgentDoNotShipUntil || null;
 
                 if (savedDate) {
                     const d = this.toDateString(savedDate);
@@ -120,12 +118,11 @@ Component.register('sw-order-detail-notes', {
                     shipDate = this.today;
                 }
 
-                order.customFields.infoplus_salesrepOrderNotes = this.note;
-                order.customFields.infoplus_salesrepNoSignatureRequired = this.noSignatureRequired;
-                order.customFields.infoplus_salesrepDoNotShipUntil = shipDate || null;
+                order.customFields.infoplus_salesAgentOrderNotes = this.note;
+                order.customFields.infoplus_salesAgentDoNotShipUntil = shipDate || null;
 
-                if (order.customFields.salesrep) {
-                    delete order.customFields.salesrep;
+                if (order.customFields.sales_agent) {
+                    delete order.customFields.sales_agent;
                 }
 
                 await this.orderRepository.save(order, Shopware.Context.api);

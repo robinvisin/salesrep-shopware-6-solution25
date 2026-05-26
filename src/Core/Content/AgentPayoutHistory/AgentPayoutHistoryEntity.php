@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Content\AgentPayoutHistory;
+namespace SalesAgent\Core\Content\AgentPayoutHistory;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityIdTrait;
@@ -18,7 +18,7 @@ class AgentPayoutHistoryEntity extends Entity
     protected float $outstandingBalance;
     protected ?float $payoutAmount = null;
     protected ?string $note = null;
-    protected ?UserEntity $salesrep = null;
+    protected ?UserEntity $salesAgent = null;
 
     public function getAgentId(): string
     {
@@ -80,13 +80,14 @@ class AgentPayoutHistoryEntity extends Entity
         $this->note = $note;
     }
 
-    public function getSalesrep(): ?UserEntity
+    public function getSalesAgent(): ?UserEntity
     {
-        return $this->salesrep;
+        return $this->salesAgent;
     }
 
-    public function setSalesrep(?UserEntity $salesrep): void
+    public function setSalesAgent(?UserEntity $salesAgent): void
     {
-        $this->salesrep = $salesrep;
+        $this->salesAgent = $salesAgent;
     }
+
 }

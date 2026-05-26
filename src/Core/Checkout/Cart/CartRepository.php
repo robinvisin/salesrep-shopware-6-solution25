@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Checkout\Cart;
+namespace SalesAgent\Core\Checkout\Cart;
 
 use DateTime;
 use Doctrine\DBAL\Connection;
@@ -37,7 +37,7 @@ final class CartRepository
         $qb = $this->connection->createQueryBuilder();
         $qb->select('c.token', 'c.payload', 'c.created_at', 'ac.updated_at')
             ->from('cart', 'c')
-            ->leftJoin('c', 'salesrep_abandoned_cart', 'ac', 'c.token = ac.cart_token')
+            ->leftJoin('c', 'sales_agent_abandoned_cart', 'ac', 'c.token = ac.cart_token')
             ->where($qb->expr()->in('c.token', $selectAbandonedCartTokensQuery))
             ->orderBy('c.created_at', 'ASC');
 
@@ -111,10 +111,10 @@ final class CartRepository
         $selectAbandonedCartTokensQuery = $this->generateAbandonedCartTokensQuery();
 
         $statement = $this->connection->prepare(<<<SQL
-            SELECT salesrep_abandoned_cart.cart_token AS token
-            FROM salesrep_abandoned_cart
+            SELECT sales_agent_abandoned_cart.cart_token AS token
+            FROM sales_agent_abandoned_cart
 
-            LEFT JOIN cart ON salesrep_abandoned_cart.cart_token = cart.token
+            LEFT JOIN cart ON sales_agent_abandoned_cart.cart_token = cart.token
                 AND cart.token IN ($selectAbandonedCartTokensQuery)
 
             WHERE cart.token IS NULL;

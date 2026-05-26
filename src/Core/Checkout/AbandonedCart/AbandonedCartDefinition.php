@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Checkout\AbandonedCart;
+namespace SalesAgent\Core\Checkout\AbandonedCart;
 
 use Shopware\Core\Checkout\Customer\CustomerDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
@@ -19,7 +19,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 final class AbandonedCartDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'salesrep_abandoned_cart';
+    public const ENTITY_NAME = 'sales_agent_abandoned_cart';
 
     public function getEntityName(): string
     {

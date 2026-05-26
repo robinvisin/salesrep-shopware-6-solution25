@@ -1,7 +1,7 @@
 {% set isAgent =
     (context.imitatingUserId is defined and context.imitatingUserId)
     or (context.customer and context.customer.customFields is defined
-        and (context.customer.customFields.salesrep ?? false) in [true, 1, '1'])
+        and (context.customer.customFields.sales_agent ?? false) in [true, 1, '1'])
 %}
 
 {% if isAgent
@@ -9,10 +9,10 @@
     and lineItem.price
     and lineItem.type == 'product' %}
 
-
     {% set currentUnit = lineItem.payload.saFinalUnitPrice ?? lineItem.price.unitPrice %}
     {% set origUnit = lineItem.payload.saOriginalUnitPrice ?? lineItem.price.unitPrice %}
     {% set limit = page.extensions.saAgentCfg.discountLimit|default(0) %}
+
     <div class="sa-price-editor mt-2"
          data-sa-price-editor
          data-line-item-id="{{ lineItem.id }}"
@@ -73,138 +73,142 @@
     </style>
 
     <script>
-        (function () {
-            if (window.__saPriceEditorInlineLoaded) return;
-            window.__saPriceEditorInlineLoaded = true;
+      (() => {
+        if (window.__saPriceEditorInlineLoaded) return;
+        window.__saPriceEditorInlineLoaded = true;
 
-            function bind(root) {
-                var nodes = (root || document).querySelectorAll('[data-sa-price-editor]');
-                if (!nodes || !nodes.length) return;
+        const toCents = (n) => Math.round((Number(n) + 1e-9) * 100);
+        const ceilToCents = (n) => Math.ceil((Number(n) + 1e-9) * 100);
 
-                nodes.forEach(function (el) {
-                    if (el.dataset.saBound === '1') return;
-                    el.dataset.saBound = '1';
+        const bind = (root) => {
+          const nodes = (root || document).querySelectorAll('[data-sa-price-editor]');
+          if (!nodes?.length) return;
 
-                    var input = el.querySelector('.js-sa-price-input');
-                    var btn   = el.querySelector('.js-sa-apply');
-                    var err   = el.querySelector('.js-sa-error');
+          nodes.forEach((el) => {
+            if (el.dataset.saBound === '1') return;
+            el.dataset.saBound = '1';
 
-                    var lineItemId = el.dataset.lineItemId;
-                    var orig  = parseFloat(el.dataset.orig || '0');
-                    var limit = parseFloat(el.dataset.limit || '0');
+            const input = el.querySelector('.js-sa-price-input');
+            const btn   = el.querySelector('.js-sa-apply');
+            const err   = el.querySelector('.js-sa-error');
 
-                    if (!input || !btn || !lineItemId || !orig) return;
+            const lineItemId = el.dataset.lineItemId;
+            const orig  = parseFloat(el.dataset.orig || '0');
+            const limit = parseFloat(el.dataset.limit || '0');
 
-                    // Disable editing if limit = 0
-                    if (limit === 0) {
-                        input.disabled = true;
-                        btn.disabled = true;
-                        return; // skip event bindings
-                    }
+            if (!input || !btn || !lineItemId || !orig) return;
 
-                    // Add focus/blur highlight
-                    input.addEventListener('focus', function () {
-                        input.classList.add('sa-input-active');
-                    });
-                    input.addEventListener('blur', function () {
-                        input.classList.remove('sa-input-active');
-                    });
-
-                    function showError(msg) {
-                        if (err) { err.textContent = msg; err.classList.remove('d-none'); }
-                        if (input) input.classList.add('is-invalid');
-                    }
-
-                    function clearError() {
-                        if (err) { err.textContent = ''; err.classList.add('d-none'); }
-                        if (input) input.classList.remove('is-invalid');
-                    }
-
-                    btn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        clearError();
-
-                        var raw = (input.value || '').toString().replace(',', '.');
-                        var val = parseFloat(raw);
-
-                        if (!isFinite(val) || val < 0) {
-                            return showError('Enter a valid price.');
-                        }
-
-                        if (val > orig + 1e-6) {
-                            return showError('Price cannot exceed ' + orig.toFixed(2) + '.');
-                        }
-
-                        var minAllowed = orig * (1 - (limit / 100));
-                        if (limit > 0 && val < minAllowed - 1e-6) {
-                            return showError('Too low. Minimum allowed is ' + minAllowed.toFixed(2) + '.');
-                        }
-
-                        (async function submit(price) {
-                            try {
-                                var headers = {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                };
-
-                                var csrf = document.querySelector('meta[name="csrf-token"]');
-                                if (csrf && csrf.getAttribute('content')) {
-                                    headers['sw-csrf-token'] = csrf.getAttribute('content');
-                                }
-
-                                var body = new URLSearchParams({
-                                    lineItemId: lineItemId,
-                                    price: String(price)
-                                });
-
-                                var resp = await fetch('/salesrep/line-item/price', {
-                                    method: 'POST',
-                                    credentials: 'same-origin',
-                                    headers: headers,
-                                    body: body
-                                });
-
-                                if (!resp.ok) {
-                                    var msg = 'Failed to apply discount.';
-                                    try {
-                                        var j = await resp.json();
-                                        if (j && j.error) msg = j.error;
-                                    } catch (_e) {}
-                                    return showError(msg);
-                                }
-
-                                window.location.reload();
-                            } catch (_err) {
-                                showError('Network error applying discount.');
-                            }
-                        })(val);
-                    });
-                });
+            if (limit === 0) {
+              input.disabled = true;
+              btn.disabled = true;
+              return; 
             }
 
-            function init() { bind(document); }
+            input.addEventListener('focus', () => input.classList.add('sa-input-active'));
+            input.addEventListener('blur',  () => input.classList.remove('sa-input-active'));
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init, { once: true });
-            } else {
-                init();
-            }
+            const showError = (msg) => {
+              if (err) { err.textContent = msg; err.classList.remove('d-none'); }
+              input.classList.add('is-invalid');
+            };
 
-            document.addEventListener('ajaxReloaded', init);
+            const clearError = () => {
+              if (err) { err.textContent = ''; err.classList.add('d-none'); }
+              input.classList.remove('is-invalid');
+            };
 
-            var mo = new MutationObserver(function (mutations) {
-                for (var i = 0; i < mutations.length; i++) {
-                    var m = mutations[i];
-                    if (!m.addedNodes) continue;
-                    for (var j = 0; j < m.addedNodes.length; j++) {
-                        var n = m.addedNodes[j];
-                        if (n && n.nodeType === 1) bind(n);
+            btn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              clearError();
+
+              const raw = (input.value || '').toString().trim().replace(',', '.');
+              const val = parseFloat(raw);
+
+              if (!Number.isFinite(val) || val < 0) {
+                showError('Enter a valid price.');
+                return;
+              }
+
+              const valCents  = toCents(val);
+              const origCents = toCents(orig);
+
+              if (valCents > origCents) {
+                showError(`Price cannot exceed ${(origCents / 100).toFixed(2)}.`);
+                return;
+              }
+
+                if (limit > 0 && limit < 100) {
+                    const baseMin = orig * (1 - (limit / 100));
+                    const minAllowedCents = Math.max(0, ceilToCents(baseMin));
+
+                    if (valCents < minAllowedCents) {
+                        showError(`Too low. Minimum allowed is ${(minAllowedCents / 100).toFixed(2)}.`);
+                        return;
                     }
                 }
-            });
 
-            mo.observe(document.documentElement, { childList: true, subtree: true });
-        })();
+                try {
+                const headers = {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'X-Requested-With': 'XMLHttpRequest'
+                };
+
+                const csrf = document.querySelector('meta[name="csrf-token"]');
+                if (csrf?.getAttribute('content')) {
+                  headers['sw-csrf-token'] = csrf.getAttribute('content');
+                }
+
+                const body = new URLSearchParams({
+                  lineItemId,
+                  price: String(valCents / 100)
+                });
+
+                const resp = await fetch('/sales-agent/line-item/price', {
+                  method: 'POST',
+                  credentials: 'same-origin',
+                  headers,
+                  body
+                });
+
+                if (!resp.ok) {
+                  let msg = 'Failed to apply discount.';
+                  try {
+                    const j = await resp.json();
+                    if (j?.error) msg = j.error;
+                  } catch (_e) {}
+                  showError(msg);
+                  return;
+                }
+
+                window.location.reload();
+              } catch (_err) {
+                showError('Network error applying discount.');
+              }
+            });
+          });
+        };
+
+        const init = () => bind(document);
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init, { once: true });
+        } else {
+          init();
+        }
+
+        document.addEventListener('ajaxReloaded', init);
+
+        const mo = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (!m.addedNodes) continue;
+            for (const n of m.addedNodes) {
+              if (n?.nodeType === 1) bind(n);
+            }
+          }
+        });
+
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      })();
     </script>
 {% endif %}

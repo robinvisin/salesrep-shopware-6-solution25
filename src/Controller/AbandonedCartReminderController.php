@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Controller;
+namespace SalesAgent\Controller;
 
 use Shopware\Core\Content\Mail\Service\MailService;
 use Shopware\Core\Framework\Context;
@@ -31,8 +31,8 @@ class AbandonedCartReminderController
     }
 
     #[Route(
-        path: '/api/_action/salesrep/abandoned-cart/reminder',
-        name: 'api.action.salesrep.abandoned_cart.reminder',
+        path: '/api/_action/sales-agent/abandoned-cart/reminder',
+        name: 'api.action.sales_agent.abandoned_cart.reminder',
         methods: ['POST']
     )]
     public function sendReminder(Request $request, Context $context): JsonResponse

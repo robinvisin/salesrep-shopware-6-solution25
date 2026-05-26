@@ -1,0 +1,71 @@
+{% block sales_king_all_time_earnings %}
+<sw-page class="sales-king-all-time-earnings" page-title="All-time earnings">
+
+  <template #smart-bar-header>
+    <div class="sales-king-all-time-earnings__header" style="display:flex;align-items:center;gap:8px;">
+      <router-link
+        :to="{ name: 'sales.king.dashboard.list' }"
+        class="sw-icon sw-icon--default"
+        style="display:flex;align-items:center;color:var(--color-darkgray-200);"
+      >
+        <sw-icon name="regular-long-arrow-left"/>
+      </router-link>
+
+      <h2 style="margin:0;">
+        {{ $tc('sales-king.all-time-earnings.title') || 'All-time earnings' }}
+      </h2>
+    </div>
+  </template>
+
+  <template #smart-bar-actions>
+    <router-link class="sw-button sw-button--ghost" :to="{ name: 'sales.king.dashboard.list' }">
+      {{ $tc('sales-king.all-time-earnings.back-to-dashboard') || 'Back to dashboard' }}
+    </router-link>
+  </template>
+
+  <template #content>
+    <div class="sales-king-all-time-earnings__content" >
+      <template v-if="isAdminUser">
+          <sw-data-grid
+            v-if="adminAgentColumns && adminAgentColumns.length"
+            :dataSource="adminAgents"
+            :columns="adminAgentColumns"
+            :showSelection="false"
+            :isLoading="adminAgentsLoading"
+            :showActions="false"
+          >
+            <template #column-lifetimeSales="{ item }">
+              {{ formatCurrency(item.lifetimeSales) }}
+            </template>
+
+            <template #column-lifetimeCommission="{ item }">
+              {{ formatCurrency(item.lifetimeCommission) }}
+            </template>
+            <template #column-export="{ item }">
+              <sw-button size="small" variant="ghost" @click="downloadAgentCsv(item)">
+                Download CSV
+              </sw-button>
+            </template>
+          </sw-data-grid>
+      </template>
+      <template v-else>
+        <sales-king-earnings-kpi
+          :value="lifetimeCommission"
+          :sales="lifetimeSales"
+          :title="$tc('sales-king.earnings.kpiTitle') || 'All-time earnings'"
+          :isLoading="isLoading"
+          @download="downloadCsv"
+        />
+
+        <sales-king-yearly-commission-chart
+          class="mt-4"
+          :years="years"
+          :defaultYear="years[0]"
+          :title="$tc('sales-king.yearlyCommission.title') || 'Commission Trend (All-time)'"
+        />
+      </template>
+     </div>
+  </template>
+
+</sw-page>
+{% endblock %}

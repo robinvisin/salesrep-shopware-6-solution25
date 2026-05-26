@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
-use Salesrep\Core\Content\SalesrepCommission\SalesrepCommissionEntity;
+use SalesAgent\Core\Content\SalesAgentCommission\SalesAgentCommissionEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
@@ -61,7 +61,7 @@ final class CommissionUpserter
         $byOrderId = [];
         /** @var Entity $row */
         foreach ($existing->getEntities() as $row) {
-            if ($row instanceof SalesrepCommissionEntity) {
+            if ($row instanceof SalesAgentCommissionEntity) {
                 $byOrderId[$row->getOrderId()] = $row->getUniqueIdentifier();
             }
         }
@@ -96,7 +96,7 @@ final class CommissionUpserter
 
         $payloads = [];
         foreach ($existing->getEntities() as $entity) {
-            if (!$entity instanceof SalesrepCommissionEntity) {
+            if (!$entity instanceof SalesAgentCommissionEntity) {
                 continue;
             }
 
@@ -114,4 +114,53 @@ final class CommissionUpserter
 
         $this->commissionRepo->upsert($payloads, $context);
     }
+
+    /**
+     * @param string $orderId
+     * @param array<string> $excludeAgentIds
+     * @param Context $context
+     * @return void
+     */
+    public function zeroOutByOrderIdExcludingAgents(string $orderId, array $excludeAgentIds, Context $context): void
+    {
+        if ($orderId === '') {
+            return;
+        }
+
+        $criteria = (new Criteria())
+            ->addFilter(new EqualsAnyFilter('orderId', [$orderId]))
+            ->addFilter(new EqualsFilter('orderVersionId', Defaults::LIVE_VERSION));
+
+        $existing = $this->commissionRepo->search($criteria, $context);
+        if ($existing->count() === 0) {
+            return;
+        }
+
+        $payloads = [];
+        foreach ($existing->getEntities() as $entity) {
+            if (!$entity instanceof SalesAgentCommissionEntity) {
+                continue;
+            }
+
+            if (in_array($entity->getAgentId(), $excludeAgentIds, true)) {
+                continue;
+            }
+
+            $payloads[] = [
+                'id'                        => $entity->getUniqueIdentifier(),
+                'orderId'                   => $entity->getOrderId(),
+                'orderVersionId'            => Defaults::LIVE_VERSION,
+                'agentId'                   => $entity->getAgentId(),
+                'excludedByAgentEmail'      => $entity->isExcludedByAgentEmail(),
+                'commissionPercentApplied'  => 0.00,
+                'effectiveDiscountPercent'  => 0.00,
+                'commissionAmount'          => 0.00,
+            ];
+        }
+
+        if ($payloads !== []) {
+            $this->commissionRepo->upsert($payloads, $context);
+        }
+    }
 }
+ 

@@ -1,4 +1,4 @@
-import { Abandoned, ensureAbandonedStore } from '../../../../state/salesrep-abandoned.state';
+import { Abandoned, ensureAbandonedStore } from '../../../../state/sales-agent-abandoned.state';
 
 const { Component, State } = Shopware;
 
@@ -6,13 +6,13 @@ const resetSwOrderStateHard = async () => {
     try {
         await State.dispatch('swOrder/resetState');
         return;
-    } catch (e) {console.warn(e)}
+    } catch (e) {}
 
-    try { State.commit('swOrder/setCustomer', null); } catch(e) {console.warn(e)}
-    try { State.commit('swOrder/setCart', null); } catch(e) {console.warn(e)}
-    try { State.commit('swOrder/setCartLineItems', []); } catch(e) {console.warn(e)}
-    try { State.commit('swOrder/setContextToken', null); } catch(e) {console.warn(e)}
-    try { State.commit('swOrder/setSalesChannelId', null); } catch(e) {console.warn(e)}
+    try { State.commit('swOrder/setCustomer', null); } catch {}
+    try { State.commit('swOrder/setCart', null); } catch {}
+    try { State.commit('swOrder/setCartLineItems', []); } catch {}
+    try { State.commit('swOrder/setContextToken', null); } catch {}
+    try { State.commit('swOrder/setSalesChannelId', null); } catch {}
 };
 
 Component.override('sw-order-create-initial', {
@@ -51,22 +51,22 @@ Component.override('sw-order-create-initial', {
             }
         },
 
-        async __salesrepCleanupOnCancel() {
+        async __salesAgentCleanupOnCancel() {
             try {
                 Abandoned.enableClear();
                 Abandoned.clear();
-            } catch (e) {console.warn(e)}
+            } catch (e) {}
 
             await resetSwOrderStateHard();
         },
 
         async onCancel() {
-            await this.__salesrepCleanupOnCancel();
+            await this.__salesAgentCleanupOnCancel();
             return this.$super('onCancel');
         },
 
         async onClose() {
-            await this.__salesrepCleanupOnCancel();
+            await this.__salesAgentCleanupOnCancel();
             return this.$super('onClose');
         },
     },
@@ -75,7 +75,7 @@ Component.override('sw-order-create-initial', {
         const goingToOrderCreate = String(to?.name || '').startsWith('sw.order.create');
 
         if (!goingToOrderCreate) {
-            await this.__salesrepCleanupOnCancel();
+            await this.__salesAgentCleanupOnCancel();
         }
 
         next();

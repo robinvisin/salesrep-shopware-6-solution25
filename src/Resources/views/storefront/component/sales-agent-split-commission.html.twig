@@ -1,0 +1,264 @@
+{% set accessKey = context.salesChannel.accessKey %}
+{% set isAgent =
+    (context.imitatingUserId is defined and context.imitatingUserId)
+    or (context.customer and context.customer.customFields is defined
+        and (context.customer.customFields.sales_agent ?? false) in [true, 1, '1'])
+%}
+
+{% if isAgent %}
+<div
+  class="card checkout-card"
+  id="sales-agent-split"
+  style="margin-top: 12px;"
+  data-endpoint="{{ path('store-api.sales-agent.cart.split') }}"
+  data-access-key="{{ accessKey }}"
+  data-context-token="{{ context.token }}"
+  data-validate-endpoint="{{ path('frontend.sales-agent.validate-email') }}"
+>
+  <div class="card-title">Split commission</div>
+
+  <div class="form-group" style="margin-bottom: 12px;">
+    <label class="form-label" for="sa-split-email">Sales agent email</label>
+    <input id="sa-split-email" type="email" class="form-control sa-focusable" placeholder="agent@example.com">
+    <div id="sa-split-email-err" class="sa-error-text" style="display:none;"></div>
+  </div>
+
+  <div class="form-group" style="margin-bottom: 12px;">
+    <label class="form-label" for="sa-split-percent">Percent (%)</label>
+    <input id="sa-split-percent" type="text" class="form-control sa-focusable" inputmode="numeric" pattern="[0-9]*" placeholder="10">
+    <div id="sa-split-percent-err" class="sa-error-text" style="display:none;"></div>
+  </div>
+
+  <div style="display:flex; gap:10px; justify-content:flex-end;">
+    <button type="button" id="sa-split-clear" class="btn btn-secondary btn-sm">Clear split</button>
+  </div>
+</div>
+{% endif %}
+<script>
+(function () {
+  const root = document.getElementById('sales-agent-split');
+  if (!root) return;
+
+  const endpoint = root.dataset.endpoint;
+  const accessKey = root.dataset.accessKey;
+  const contextToken = root.dataset.contextToken;
+  const validateEndpoint = root.dataset.validateEndpoint;
+
+  const form = document.getElementById('confirmOrderForm');
+  const submitBtn = document.getElementById('confirmFormSubmit');
+  if (!form || !submitBtn) return;
+
+  const emailEl = document.getElementById('sa-split-email');
+  const percentEl = document.getElementById('sa-split-percent');
+  const clearBtn = document.getElementById('sa-split-clear');
+  const emailErr = document.getElementById('sa-split-email-err');
+  const percErr = document.getElementById('sa-split-percent-err');
+
+  const SUBMIT_DELAY_MS = 500;
+  const EMAIL_DEBOUNCE_MS = 350;
+
+  let emailTimer = null;
+  let activeEmailAbort = null;
+  let lastValidatedEmail = '';
+  let lastEmailValid = null;
+
+  function showError(input, box, msg) {
+    if (input) input.classList.add('sa-has-error');
+    if (box) { box.textContent = msg; box.style.display = 'block'; }
+  }
+  function clearError(input, box) {
+    if (input) input.classList.remove('sa-has-error');
+    if (box) { box.textContent = ''; box.style.display = 'none'; }
+  }
+  function digitsOnly(raw) { return String(raw ?? '').replace(/[^\d]/g, ''); }
+  function clamp0to100(raw) {
+    const d = digitsOnly(raw);
+    if (!d) return '';
+    let n = parseInt(d, 10);
+    if (!Number.isFinite(n)) return '';
+    n = Math.max(0, Math.min(100, n));
+    return String(n);
+  }
+
+  // percent input enforcement
+  percentEl.addEventListener('input', () => {
+    clearError(percentEl, percErr);
+    percentEl.value = clamp0to100(percentEl.value);
+  });
+
+  function setEmailChecking() {
+    emailEl.classList.remove('sa-has-error');
+    if (emailErr) { emailErr.textContent = 'Checking email...'; emailErr.style.display = 'block'; }
+  }
+
+  async function validateEmailNow(rawEmail) {
+    const email = (rawEmail || '').trim();
+
+    if (!email) {
+      clearError(emailEl, emailErr);
+      lastValidatedEmail = '';
+      lastEmailValid = null;
+      return null;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      lastValidatedEmail = email;
+      lastEmailValid = false;
+      showError(emailEl, emailErr, 'Enter a valid email format');
+      return false;
+    }
+
+    if (email === lastValidatedEmail && lastEmailValid !== null) return lastEmailValid;
+
+    if (activeEmailAbort) { try { activeEmailAbort.abort(); } catch(e) {} }
+    activeEmailAbort = new AbortController();
+
+    setEmailChecking();
+
+    try {
+      const res = await fetch(validateEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ email }),
+        signal: activeEmailAbort.signal
+      });
+
+      if (!res.ok) {
+        lastValidatedEmail = email;
+        lastEmailValid = false;
+        showError(emailEl, emailErr, 'Could not validate email (server error)');
+        return false;
+      }
+
+      const data = await res.json();
+      const ok = !!(data && data.valid === true);
+
+      lastValidatedEmail = email;
+      lastEmailValid = ok;
+
+      if (ok) clearError(emailEl, emailErr);
+      else showError(emailEl, emailErr, 'Sales agent email does not exist or is not a Sales Agent');
+
+      return ok;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return null;
+      lastValidatedEmail = email;
+      lastEmailValid = false;
+      showError(emailEl, emailErr, 'Could not validate email (network error)');
+      return false;
+    }
+  }
+
+  function scheduleEmailValidation() {
+    if (emailTimer) clearTimeout(emailTimer);
+    emailTimer = setTimeout(() => validateEmailNow(emailEl.value), EMAIL_DEBOUNCE_MS);
+  }
+
+  emailEl.addEventListener('input', () => {
+    clearError(emailEl, emailErr);
+    lastEmailValid = null;
+    scheduleEmailValidation();
+  });
+
+  emailEl.addEventListener('blur', () => validateEmailNow(emailEl.value));
+
+  function postSplit(payload, done) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', endpoint, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    if (accessKey) xhr.setRequestHeader('sw-access-key', accessKey);
+    if (contextToken) xhr.setRequestHeader('sw-context-token', contextToken);
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      const ok = xhr.status >= 200 && xhr.status < 300;
+      done && done(ok, xhr.responseText);
+    };
+
+    xhr.onerror = function () {
+      done && done(false, null);
+    };
+
+    // match your controller shape support: { sales_agent: {...} }
+    xhr.send(JSON.stringify({ sales_agent: payload }));
+  }
+
+  function setMainButtonLoading() {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('is-loading');
+  }
+
+  clearBtn.addEventListener('click', () => {
+    clearError(emailEl, emailErr);
+    clearError(percentEl, percErr);
+    emailEl.value = '';
+    percentEl.value = '';
+
+    postSplit({ sales_agent_split_email: '', sales_agent_split_percent: null }, () => {});
+  });
+
+  // ---- notes-style intercept native submit() ----
+  const nativeSubmit = HTMLFormElement.prototype.submit;
+
+  HTMLFormElement.prototype.submit = function (...args) {
+    try {
+      if (this.id !== 'confirmOrderForm') return nativeSubmit.apply(this, args);
+
+      if (this._saSplitSynced) return nativeSubmit.apply(this, args);
+      this._saSplitSynced = true;
+
+      clearError(emailEl, emailErr);
+      clearError(percentEl, percErr);
+
+      const email = (emailEl.value || '').trim();
+      const percent = clamp0to100(percentEl.value);
+
+      const hasEmail = !!email;
+      const hasPercent = !!percent;
+
+      // no split => clear it in cart, then submit
+      if (!hasEmail && !hasPercent) {
+        setMainButtonLoading();
+        postSplit({ sales_agent_split_email: '', sales_agent_split_percent: null }, () => {
+          setTimeout(() => nativeSubmit.apply(this, args), SUBMIT_DELAY_MS);
+        });
+        return;
+      }
+
+      // require both
+      if (hasEmail && !hasPercent) { this._saSplitSynced = false; showError(percentEl, percErr, 'Percent is required if you set an email'); return; }
+      if (!hasEmail && hasPercent) { this._saSplitSynced = false; showError(emailEl, emailErr, 'Email is required if you set a percent'); return; }
+
+      // validate then persist then submit
+      (async () => {
+        const ok = (email === lastValidatedEmail && lastEmailValid !== null)
+          ? lastEmailValid
+          : await validateEmailNow(email);
+
+        if (ok !== true) { this._saSplitSynced = false; return; }
+
+        setMainButtonLoading();
+        postSplit(
+          { sales_agent_split_email: email, sales_agent_split_percent: Number(percent) },
+          (savedOk) => {
+            if (!savedOk) {
+              this._saSplitSynced = false;
+              showError(emailEl, emailErr, 'Could not save split to cart. Please try again.');
+              submitBtn.disabled = false;
+              submitBtn.classList.remove('is-loading');
+              return;
+            }
+            setTimeout(() => nativeSubmit.apply(this, args), SUBMIT_DELAY_MS);
+          }
+        );
+      })();
+
+      return;
+    } catch (e) {
+      try { this._saSplitSynced = false; } catch(_) {}
+      return nativeSubmit.apply(this, args);
+    }
+  };
+})();
+</script>

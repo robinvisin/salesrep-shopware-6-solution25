@@ -1,10 +1,10 @@
 
 {% block sw_order_detail_general %}
 <sw-card
-    v-if="isSalesAgentUser"
+        v-if="isSalesAgentUser && !isOrderCancelled"
     title="Commission claim request"
     :isLoading="claimReqLoading"
-    class="salesrep-claim-request-card"
+    class="sales-agent-claim-request-card"
 >
     <template v-if="claimReqStatus === 'approved'">
         <sw-alert variant="success" appearance="notification" :showIcon="true">

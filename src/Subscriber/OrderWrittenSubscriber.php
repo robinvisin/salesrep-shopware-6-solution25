@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Subscriber;
+namespace SalesAgent\Subscriber;
 
 use Doctrine\DBAL\Connection;
-use Salesrep\Core\Content\SalesrepConfig\SalesrepConfigEntity;
-use Salesrep\Service\AgentResolver;
-use Salesrep\Service\CommissionUpserter;
-use Salesrep\Service\DiscountCalculator;
-use Salesrep\Service\NumberResolver;
+use SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigEntity;
+use SalesAgent\Service\AgentResolver;
+use SalesAgent\Service\CommissionUpserter;
+use SalesAgent\Service\DiscountCalculator;
+use SalesAgent\Service\NumberResolver;
 use Shopware\Core\Checkout\Order\OrderDefinition;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Order\OrderStates;
@@ -25,35 +25,31 @@ use Shopware\Core\PlatformRequest;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Core\System\User\UserEntity;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 final class OrderWrittenSubscriber implements EventSubscriberInterface
 {
-    private const CF_SPLIT_EMAIL      = 'salesrep_split_email';
-    private const CF_SPLIT_PERCENT    = 'salesrep_split_percent';
-    private const CF_SPLIT_AMOUNT     = 'salesrep_split_amount';
-    private const CF_COMMISSION_SPLIT = 'salesrep_commission_split';
-    private const CF_SPLIT_AGENT_ID   = 'salesrep_split_agent_id';
-
-    private const CF_CREATED_BY_SALESREP    = 'created_by_salesrep';
-    private const CF_CREATED_BY_SALESREP_ID = 'created_by_salesrep_id';
-
-    private const CTX_STATE_SKIP = 'salesrep_skip_split_recompute';
+    private const CF_SPLIT_EMAIL      = 'sales_agent_split_email';
+    private const CF_SPLIT_PERCENT    = 'sales_agent_split_percent';
+    private const CF_SPLIT_AMOUNT     = 'sales_agent_split_amount';
+    private const CF_COMMISSION_SPLIT = 'sales_agent_commission_split';
+    private const CF_SPLIT_AGENT_ID   = 'sales_agent_split_agent_id';
+    private const CF_CREATED_BY_SALES_AGENT    = 'created_by_sales_agent';
+    private const CF_CREATED_BY_SALES_AGENT_ID = 'created_by_sales_agent_id';
+    private const CTX_STATE_SKIP = 'sales_agent_skip_split_recompute';
 
     public function __construct(
-        private readonly EntityRepository $orderRepository,
-        private readonly EntityRepository $userRepository,
-        private readonly EntityRepository $salesrepConfigRepository,
+        private readonly EntityRepository    $orderRepository,
+        private readonly EntityRepository    $userRepository,
+        private readonly EntityRepository    $salesAgentConfigRepository,
         private readonly SystemConfigService $systemConfig,
-        private readonly RequestStack $requestStack,
-        private readonly AgentResolver $agentResolver,
-        private readonly NumberResolver $nums,
-        private readonly DiscountCalculator $discounts,
-        private readonly CommissionUpserter $upserter,
-        private readonly Connection $connection,
-    ) {
-    }
+        private readonly RequestStack        $requestStack,
+        private readonly AgentResolver       $agentResolver,
+        private readonly NumberResolver      $nums,
+        private readonly DiscountCalculator  $discounts,
+        private readonly CommissionUpserter  $upserter,
+        private readonly Connection          $connection,
+    ) {}
 
     public static function getSubscribedEvents(): array
     {
@@ -71,7 +67,6 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         }
 
         $req = $this->requestStack->getCurrentRequest();
-        [$reqSplitEmail, $reqSplitPercent] = $this->extractSplitFromRequest($req);
 
         $requestSalesChannelId = null;
         if ($req) {
@@ -86,12 +81,10 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         foreach ($event->getWriteResults() as $wr) {
             $op = $wr->getOperation();
 
-            if (
-                !\in_array($op, [
+            if (!\in_array($op, [
                 EntityWriteResult::OPERATION_INSERT,
                 EntityWriteResult::OPERATION_UPDATE,
-                ], true)
-            ) {
+            ], true)) {
                 continue;
             }
 
@@ -106,7 +99,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                 $versionId = Defaults::LIVE_VERSION;
             }
 
-            if ($op === EntityWriteResult::OPERATION_UPDATE && !$this->shouldProcessUpdate($wrPayload, $reqSplitEmail, $reqSplitPercent)) {
+            if ($op === EntityWriteResult::OPERATION_UPDATE && !$this->shouldProcessUpdate($wrPayload)) {
                 continue;
             }
 
@@ -148,14 +141,14 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
 
             $isSalesAgent = false;
 
-            /** @var SalesrepConfigEntity|null $agentCfg */
+            /** @var SalesAgentConfigEntity|null $agentCfg */
             $agentCfg = null;
 
             /** @var UserEntity|null $agentUser */
             $agentUser = null;
 
             if ($agentId !== '') {
-                $agentCfg = $this->salesrepConfigRepository
+                $agentCfg = $this->salesAgentConfigRepository
                     ->search((new Criteria())->addFilter(new EqualsFilter('userId', $agentId)), $ctx)
                     ->first();
 
@@ -164,14 +157,14 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
 
                 $isSalesAgent =
                     ($agentCfg !== null) ||
-                    (($agentUserCf['salesrep'] ?? false) === true || (string)($agentUserCf['salesrep'] ?? '') === '1');
+                    (($agentUserCf['sales_agent'] ?? false) === true || (string)($agentUserCf['sales_agent'] ?? '') === '1');
             }
 
             $orderCfNow = $order->getCustomFields() ?? [];
-            $flagExists = \array_key_exists(self::CF_CREATED_BY_SALESREP, $orderCfNow);
+            $flagExists = \array_key_exists(self::CF_CREATED_BY_SALES_AGENT, $orderCfNow);
 
             if ($op === EntityWriteResult::OPERATION_INSERT || !$flagExists) {
-                $this->storeCreatedBySalesrepMeta(
+                $this->storeCreatedBySalesAgentMeta(
                     $orderId,
                     $versionId,
                     $isSalesAgent,
@@ -182,24 +175,32 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
 
             $orderCf = $order->getCustomFields() ?? [];
 
-            $postedSplitEmail = trim((string)($orderCf[self::CF_SPLIT_EMAIL] ?? $reqSplitEmail));
-            $postedSplitPercent = (float)($orderCf[self::CF_SPLIT_PERCENT] ?? $reqSplitPercent);
+            $postedSplitEmail = trim((string)($orderCf[self::CF_SPLIT_EMAIL] ?? ''));
+            $postedSplitPercent = (float)($orderCf[self::CF_SPLIT_PERCENT] ?? 0.0);
             $postedSplitPercent = max(0.0, min(100.0, $postedSplitPercent));
+
+            $splitMutationRequested = $op === EntityWriteResult::OPERATION_UPDATE
+                && $this->hasSplitMutationInPayload($wrPayload);
+            if ($splitMutationRequested && !$this->canActorMutateSplit($agentId, $ctx)) {
+                $postedSplitEmail = '';
+                $postedSplitPercent = 0.0;
+                $this->clearSplitMeta($orderId, $versionId, $ctx);
+            }
 
             $commissionPercentage = $this->nums->resolveFloat(
                 $agentCfg?->getCommissionPercentage(),
-                'Salesrep.config.commissionPercentage',
+                'SalesAgent.config.commissionPercentage',
                 $salesChannelId
             );
 
             $discountLimit = $this->nums->resolveFloat(
                 $agentCfg?->getDiscountLimit(),
-                'Salesrep.config.discountLimit',
+                'SalesAgent.config.discountLimit',
                 $salesChannelId
             );
 
             $excludedEmails = $this->normalizeExcludedEmails(
-                $this->systemConfig->get('Salesrep.config.excludedEmails', $salesChannelId)
+                $this->systemConfig->get('SalesAgent.config.excludedEmails', $salesChannelId)
             );
 
             $agentEmail = $agentUser ? $this->lower((string)$agentUser->getEmail()) : null;
@@ -239,11 +240,15 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                     $ctx
                 )->first();
 
-                if ($splitUser) {
+                if ($splitUser && $this->isSalesAgentUserId((string) $splitUser->getId(), $ctx)) {
                     $splitAgentId = $splitUser->getId();
+                } else {
+                    $postedSplitEmail = '';
+                    $postedSplitPercent = 0.0;
+                    $splitAmount = 0.0;
                 }
 
-                $this->storeSplitMeta(
+                $this->maybeStoreOrClearSplitMeta(
                     $orderId,
                     $versionId,
                     $postedSplitEmail,
@@ -287,54 +292,83 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         });
     }
 
-    private function shouldProcessUpdate(array $wrPayload, string $reqSplitEmail, float $reqSplitPercent): bool
+    private function shouldProcessUpdate(array $wrPayload): bool
     {
-        if ($reqSplitEmail !== '' || $reqSplitPercent > 0.0) {
-            return true;
-        }
-
         $cfPayload = $wrPayload['customFields'] ?? null;
-        if (\is_array($cfPayload)) {
-            if (\array_key_exists(self::CF_SPLIT_EMAIL, $cfPayload) || \array_key_exists(self::CF_SPLIT_PERCENT, $cfPayload)) {
+        if (is_array($cfPayload)) {
+            if (array_key_exists(self::CF_SPLIT_EMAIL, $cfPayload) || array_key_exists(self::CF_SPLIT_PERCENT, $cfPayload)) {
                 return true;
             }
 
-            $internalKeys = [
-                self::CF_SPLIT_AMOUNT,
-                self::CF_COMMISSION_SPLIT,
-                self::CF_SPLIT_AGENT_ID,
-                self::CF_CREATED_BY_SALESREP,
-                self::CF_CREATED_BY_SALESREP_ID,
-            ];
+            return false;
+        }
 
-            $allKeys = array_keys($cfPayload);
-            $nonInternal = array_diff($allKeys, $internalKeys);
-            if ($nonInternal === []) {
-                return false;
-            }
+        foreach (['lineItems','price','amountTotal','shippingTotal','transactions','deliveries'] as $k) {
+            if (array_key_exists($k, $wrPayload)) return true;
+        }
 
+        return false;
+    }
+
+    private function hasSplitMutationInPayload(array $wrPayload): bool
+    {
+        $cfPayload = $wrPayload['customFields'] ?? null;
+
+        return \is_array($cfPayload)
+            && (
+                \array_key_exists(self::CF_SPLIT_EMAIL, $cfPayload)
+                || \array_key_exists(self::CF_SPLIT_PERCENT, $cfPayload)
+            );
+    }
+
+    private function canActorMutateSplit(string $orderAgentId, Context $context): bool
+    {
+        $actorId = (string)($this->agentResolver->resolve($context) ?? '');
+        if ($actorId === '' || !Uuid::isValid($actorId)) {
+            return false;
+        }
+
+        if ($this->isGlobalAdminUserId($actorId, $context)) {
             return true;
         }
 
-        $interestingKeys = [
-            'lineItems',
-            'price',
-            'amountTotal',
-            'shippingTotal',
-            'stateMachineStateId',
-            'transactions',
-            'deliveries',
-            'salesChannelId',
-            'createdById',
-        ];
-
-        foreach ($interestingKeys as $k) {
-            if (\array_key_exists($k, $wrPayload)) {
-                return true;
-            }
+        if ($orderAgentId === '' || !Uuid::isValid($orderAgentId)) {
+            return false;
         }
 
-        return true;
+        if ($actorId !== $orderAgentId) {
+            return false;
+        }
+
+        return $this->isSalesAgentUserId($actorId, $context);
+    }
+
+    private function isSalesAgentUserId(string $userId, Context $context): bool
+    {
+        if ($userId === '' || !Uuid::isValid($userId)) {
+            return false;
+        }
+
+        $criteria = (new Criteria())
+            ->addFilter(new EqualsFilter('userId', $userId))
+            ->setLimit(1);
+
+        return $this->salesAgentConfigRepository->search($criteria, $context)->count() > 0;
+    }
+
+    private function isGlobalAdminUserId(string $userId, Context $context): bool
+    {
+        if ($userId === '' || !Uuid::isValid($userId)) {
+            return false;
+        }
+
+        /** @var UserEntity|null $user */
+        $user = $this->userRepository->search((new Criteria([$userId]))->setLimit(1), $context)->first();
+        if (!$user) {
+            return false;
+        }
+
+        return \method_exists($user, 'isAdmin') && (bool) $user->isAdmin();
     }
 
     private function computeNetProductSubtotal(OrderEntity $order): float
@@ -382,26 +416,39 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         $this->clearSplitMeta($orderId, $orderVersionId, $ctx);
     }
 
+    private function internalWriteContext(Context $base, string $orderVersionId): Context
+    {
+        $internal = ($orderVersionId !== '' && $orderVersionId !== Defaults::LIVE_VERSION)
+            ? $base->createWithVersionId($orderVersionId)
+            : clone $base;
+    
+        $internal->addState(self::CTX_STATE_SKIP);
+    
+        return $internal;
+    }
+    
+
     private function clearSplitMeta(string $orderId, string $orderVersionId, Context $ctx): void
     {
         $ctx->scope(Context::SYSTEM_SCOPE, function (Context $system) use ($orderId, $orderVersionId): void {
-            $system->addState(self::CTX_STATE_SKIP);
+            $internal = $this->internalWriteContext($system, $orderVersionId);
 
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $system)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->first();
             $cf = $fresh?->getCustomFields() ?? [];
 
-            unset($cf[self::CF_SPLIT_EMAIL]);
-            unset($cf[self::CF_SPLIT_PERCENT]);
-            unset($cf[self::CF_COMMISSION_SPLIT]);
-            unset($cf[self::CF_SPLIT_AMOUNT]);
-            unset($cf[self::CF_SPLIT_AGENT_ID]);
+            unset(
+                $cf[self::CF_SPLIT_EMAIL],
+                $cf[self::CF_SPLIT_PERCENT],
+                $cf[self::CF_COMMISSION_SPLIT],
+                $cf[self::CF_SPLIT_AMOUNT],
+                $cf[self::CF_SPLIT_AGENT_ID]
+            );
 
             $this->orderRepository->update([[
                 'id' => $orderId,
-                'versionId' => $orderVersionId,
                 'customFields' => $cf,
-            ]], $system);
+            ]], $internal);
         });
     }
 
@@ -422,17 +469,16 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             $splitAmount,
             $splitAgentId
         ): void {
-            $system->addState(self::CTX_STATE_SKIP);
+            $internal = $this->internalWriteContext($system, $orderVersionId);
 
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $system)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->first();
             $cf = $fresh?->getCustomFields() ?? [];
 
-            $cf[self::CF_SPLIT_EMAIL] = $splitEmail;
-            $cf[self::CF_SPLIT_PERCENT] = max(0.0, min(100.0, $splitPercent));
-
+            $cf[self::CF_SPLIT_EMAIL]    = $splitEmail;
+            $cf[self::CF_SPLIT_PERCENT]  = max(0.0, min(100.0, $splitPercent));
             $cf[self::CF_COMMISSION_SPLIT] = $splitAmount;
-            $cf[self::CF_SPLIT_AMOUNT] = $splitAmount;
+            $cf[self::CF_SPLIT_AMOUNT]     = $splitAmount;
 
             if ($splitAgentId !== null) {
                 $cf[self::CF_SPLIT_AGENT_ID] = $splitAgentId;
@@ -442,13 +488,12 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
 
             $this->orderRepository->update([[
                 'id' => $orderId,
-                'versionId' => $orderVersionId,
                 'customFields' => $cf,
-            ]], $system);
+            ]], $internal);
         });
     }
 
-    private function storeCreatedBySalesrepMeta(
+    private function storeCreatedBySalesAgentMeta(
         string $orderId,
         string $orderVersionId,
         bool $isSalesAgent,
@@ -456,70 +501,25 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         Context $ctx
     ): void {
         $ctx->scope(Context::SYSTEM_SCOPE, function (Context $system) use ($orderId, $orderVersionId, $isSalesAgent, $agentId): void {
-            $system->addState(self::CTX_STATE_SKIP);
+            $internal = $this->internalWriteContext($system, $orderVersionId);
 
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $system)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->first();
             $cf = $fresh?->getCustomFields() ?? [];
 
-            $cf[self::CF_CREATED_BY_SALESREP] = $isSalesAgent;
+            $cf[self::CF_CREATED_BY_SALES_AGENT] = $isSalesAgent;
 
             if ($isSalesAgent && $agentId) {
-                $cf[self::CF_CREATED_BY_SALESREP_ID] = $agentId;
+                $cf[self::CF_CREATED_BY_SALES_AGENT_ID] = $agentId;
             } else {
-                unset($cf[self::CF_CREATED_BY_SALESREP_ID]);
+                unset($cf[self::CF_CREATED_BY_SALES_AGENT_ID]);
             }
 
             $this->orderRepository->update([[
                 'id' => $orderId,
-                'versionId' => $orderVersionId,
                 'customFields' => $cf,
-            ]], $system);
+            ]], $internal);
         });
-    }
-
-    private function extractSplitFromRequest(?Request $req): array
-    {
-        if (!$req) {
-            return ['', 0.0];
-        }
-
-        $email = trim((string)($req->request->get(self::CF_SPLIT_EMAIL) ?? ''));
-        $percent = (float)($req->request->get(self::CF_SPLIT_PERCENT) ?? 0);
-
-        if ($email === '' && $percent <= 0.0) {
-            $raw = (string)$req->getContent();
-            if ($raw !== '') {
-                $json = json_decode($raw, true);
-                if (\is_array($json)) {
-                    $foundEmail = $this->findKeyRecursive($json, self::CF_SPLIT_EMAIL);
-                    $foundPercent = $this->findKeyRecursive($json, self::CF_SPLIT_PERCENT);
-
-                    $email = trim((string)($foundEmail ?? $email));
-                    $percent = (float)($foundPercent ?? $percent);
-                }
-            }
-        }
-
-        $percent = max(0.0, min(100.0, (float)$percent));
-
-        return [$email, $percent];
-    }
-
-    private function findKeyRecursive(array $data, string $key): mixed
-    {
-        foreach ($data as $k => $v) {
-            if ($k === $key) {
-                return $v;
-            }
-            if (\is_array($v)) {
-                $found = $this->findKeyRecursive($v, $key);
-                if ($found !== null) {
-                    return $found;
-                }
-            }
-        }
-        return null;
     }
 
     private function normalizeExcludedEmails(mixed $value): array

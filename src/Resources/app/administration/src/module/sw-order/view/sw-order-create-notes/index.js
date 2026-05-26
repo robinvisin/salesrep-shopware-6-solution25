@@ -19,7 +19,6 @@ Component.register('sw-order-create-notes', {
         return {
             order: null,
             note: '',
-            noSignatureRequired: false,
             doNotShipUntil: null,
             isLoading: false,
         };
@@ -47,12 +46,12 @@ Component.register('sw-order-create-notes', {
             d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
             return d.toISOString().slice(0, 10);
         },
-    
+
         datePickerConfig() {
             return {
-                allowInput: false,     
-                minDate: this.today,   
-                dateFormat: 'Y-m-d',   
+                allowInput: false,
+                minDate: this.today,
+                dateFormat: 'Y-m-d',
             };
         }
     },
@@ -69,21 +68,8 @@ Component.register('sw-order-create-notes', {
         note(newVal) {
             if (this.isCreatePage) {
                 const payload = this.buildPayload({
-                    infoplus_salesrepOrderNotes: newVal,
-                    infoplus_salesrepNoSignatureRequired: this.noSignatureRequired,
-                    infoplus_salesrepDoNotShipUntil: this.doNotShipUntil
-                });
-                this.writeToCart(payload);
-                this.pushToBackend(payload);
-            }
-        },
-
-        noSignatureRequired(newVal) {
-            if (this.isCreatePage) {
-                const payload = this.buildPayload({
-                    infoplus_salesrepOrderNotes: this.note,
-                    infoplus_salesrepNoSignatureRequired: newVal,
-                    infoplus_salesrepDoNotShipUntil: this.doNotShipUntil
+                    infoplus_salesAgentOrderNotes: newVal,
+                    infoplus_salesAgentDoNotShipUntil: this.doNotShipUntil
                 });
                 this.writeToCart(payload);
                 this.pushToBackend(payload);
@@ -99,9 +85,8 @@ Component.register('sw-order-create-notes', {
 
             if (this.isCreatePage) {
                 const payload = this.buildPayload({
-                    infoplus_salesrepOrderNotes: this.note,
-                    infoplus_salesrepNoSignatureRequired: this.noSignatureRequired,
-                    infoplus_salesrepDoNotShipUntil: this.doNotShipUntil
+                    infoplus_salesAgentOrderNotes: this.note,
+                    infoplus_salesAgentDoNotShipUntil: this.doNotShipUntil
                 });
                 this.writeToCart(payload);
                 this.pushToBackend(payload);
@@ -123,8 +108,8 @@ Component.register('sw-order-create-notes', {
         },
 
         buildPayload(raw) {
-            let date = raw.infoplus_salesrepDoNotShipUntil
-                ? this.toDateString(raw.infoplus_salesrepDoNotShipUntil)
+            let date = raw.infoplus_salesAgentDoNotShipUntil
+                ? this.toDateString(raw.infoplus_salesAgentDoNotShipUntil)
                 : null;
 
             if (date && date < this.today) {
@@ -132,9 +117,8 @@ Component.register('sw-order-create-notes', {
             }
 
             return {
-                infoplus_salesrepOrderNotes: raw.infoplus_salesrepOrderNotes || '',
-                infoplus_salesrepNoSignatureRequired: !!raw.infoplus_salesrepNoSignatureRequired,
-                infoplus_salesrepDoNotShipUntil: date
+                infoplus_salesAgentOrderNotes: raw.infoplus_salesAgentOrderNotes || '',
+                infoplus_salesAgentDoNotShipUntil: date
             };
         },
 
@@ -146,10 +130,9 @@ Component.register('sw-order-create-notes', {
 
                 const cf = order.customFields || {};
 
-                this.note = cf.infoplus_salesrepOrderNotes || '';
-                this.noSignatureRequired = !!cf.infoplus_salesrepNoSignatureRequired;
+                this.note = cf.infoplus_salesAgentOrderNotes || '';
 
-                const savedDate = cf.infoplus_salesrepDoNotShipUntil || null;
+                const savedDate = cf.infoplus_salesAgentDoNotShipUntil || null;
 
                 if (savedDate) {
                     const d = this.toDateString(savedDate);
@@ -167,17 +150,15 @@ Component.register('sw-order-create-notes', {
 
             if (!cart) {
                 this.note = '';
-                this.noSignatureRequired = false;
                 this.doNotShipUntil = null;
                 return;
             }
 
             const cf = cart.customFields || {};
 
-            this.note = cf.infoplus_salesrepOrderNotes || '';
-            this.noSignatureRequired = !!cf.infoplus_salesrepNoSignatureRequired;
+            this.note = cf.infoplus_salesAgentOrderNotes || '';
 
-            const savedDate = cf.infoplus_salesrepDoNotShipUntil || null;
+            const savedDate = cf.infoplus_salesAgentDoNotShipUntil || null;
 
             if (savedDate) {
                 const d = this.toDateString(savedDate);
@@ -194,11 +175,11 @@ Component.register('sw-order-create-notes', {
             const cart = { ...currentCart };
             cart.customFields = cart.customFields || {};
 
-            cart.customFields.infoplus_salesrepOrderNotes = value.infoplus_salesrepOrderNotes;
-            cart.customFields.infoplus_salesrepNoSignatureRequired = value.infoplus_salesrepNoSignatureRequired;
-            cart.customFields.infoplus_salesrepDoNotShipUntil = value.infoplus_salesrepDoNotShipUntil;
-            if (cart.customFields.salesrep) {
-                delete cart.customFields.salesrep;
+            cart.customFields.infoplus_salesAgentOrderNotes = value.infoplus_salesAgentOrderNotes;
+            cart.customFields.infoplus_salesAgentDoNotShipUntil = value.infoplus_salesAgentDoNotShipUntil;
+
+            if (cart.customFields.sales_agent) {
+                delete cart.customFields.sales_agent;
             }
 
             State.commit('swOrder/setCart', cart);
@@ -223,7 +204,7 @@ Component.register('sw-order-create-notes', {
                 'sw-context-token': contextToken
             };
 
-            const url = `_proxy/store-api/${salesChannelId}/salesrep/cart/note`;
+            const url = `_proxy/store-api/${salesChannelId}/sales-agent/cart/note`;
 
             await cartStoreService.httpClient.post(
                 url,
@@ -242,17 +223,15 @@ Component.register('sw-order-create-notes', {
                 order.customFields = order.customFields || {};
 
                 const payload = this.buildPayload({
-                    infoplus_salesrepOrderNotes: this.note,
-                    infoplus_salesrepNoSignatureRequired: this.noSignatureRequired,
-                    infoplus_salesrepDoNotShipUntil: this.doNotShipUntil
+                    infoplus_salesAgentOrderNotes: this.note,
+                    infoplus_salesAgentDoNotShipUntil: this.doNotShipUntil
                 });
 
-                order.customFields.infoplus_salesrepOrderNotes = payload.infoplus_salesrepOrderNotes;
-                order.customFields.infoplus_salesrepNoSignatureRequired = payload.infoplus_salesrepNoSignatureRequired;
-                order.customFields.infoplus_salesrepDoNotShipUntil = payload.infoplus_salesrepDoNotShipUntil;
+                order.customFields.infoplus_salesAgentOrderNotes = payload.infoplus_salesAgentOrderNotes;
+                order.customFields.infoplus_salesAgentDoNotShipUntil = payload.infoplus_salesAgentDoNotShipUntil;
 
-                if (order.customFields.salesrep) {
-                    delete order.customFields.salesrep;
+                if (order.customFields.sales_agent) {
+                    delete order.customFields.sales_agent;
                 }
 
                 await this.orderRepository.save(order, Shopware.Context.api);

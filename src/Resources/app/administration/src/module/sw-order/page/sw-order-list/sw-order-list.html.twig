@@ -1,19 +1,21 @@
 {% block sw_order_list_grid_label_manual_order %}
 
     <sw-label
-        v-if="item.customFields && (item.customFields.created_by_salesrep === true || item.customFields.created_by_salesrep === 1 || item.customFields.created_by_salesrep === '1')"
-        appearance="pill"
-        size="small"
-        class="sw-order-list__manual-order-label"
+            v-if="item.customFields && (item.customFields.created_by_sales_agent === true || item.customFields.created_by_sales_agent === 1 || item.customFields.created_by_sales_agent === '1')"
+            appearance="pill"
+            size="small"
+            class="sw-order-list__manual-order-label"
     >
-        {{ $tc('Created by Sales Agent') }}
+
+
+        {{ $tc('Created by Sales Agent') }}<span>: {{ getSalesAgentEmail(item) }}</span>
     </sw-label>
 
     <sw-label
-        v-else-if="item.createdById"
-        appearance="pill"
-        size="small"
-        class="sw-order-list__manual-order-label"
+            v-else-if="item.createdById"
+            appearance="pill"
+            size="small"
+            class="sw-order-list__manual-order-label"
     >
         {{ $tc('sw-order.list.labelManualOrder') }}
     </sw-label>

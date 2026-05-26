@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
 use Doctrine\DBAL\Connection;
-use Salesrep\Core\Content\SalesrepConfig\SalesrepConfigEntity;
+use SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigEntity;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
@@ -18,34 +18,40 @@ use Shopware\Core\System\User\UserEntity;
 
 final class OrderCommissionRecalculator
 {
-    private const CF_SPLIT_EMAIL      = 'salesrep_split_email';
-    private const CF_SPLIT_PERCENT    = 'salesrep_split_percent';
+    private const CF_SPLIT_EMAIL      = 'sales_agent_split_email';
+    private const CF_SPLIT_PERCENT    = 'sales_agent_split_percent';
+    private const CF_SPLIT_AMOUNT     = 'sales_agent_split_amount';
+    private const CF_COMMISSION_SPLIT = 'sales_agent_commission_split';
+    private const CF_SPLIT_AGENT_ID   = 'sales_agent_split_agent_id';
 
-    private const CF_CREATED_BY_SALESREP    = 'created_by_salesrep';
-    private const CF_CREATED_BY_SALESREP_ID = 'created_by_salesrep_id';
+    private const CF_CREATED_BY_SALES_AGENT    = 'created_by_sales_agent';
+    private const CF_CREATED_BY_SALES_AGENT_ID = 'created_by_sales_agent_id';
 
-    private const CF_CLAIMED_USER_ID = 'salesrep_claimed_user_id';
-    private const CF_CLAIMED_AT      = 'salesrep_claimed_at';
+    private const CF_CLAIMED_USER_ID = 'sales_agent_claimed_user_id';
+    private const CF_CLAIMED_AT      = 'sales_agent_claimed_at';
+    private const CTX_STATE_SKIP_SPLIT_RECOMPUTE = 'sales_agent_skip_split_recompute';
 
     public function __construct(
-        private readonly EntityRepository $orderRepo,
-        private readonly EntityRepository $userRepo,
-        private readonly EntityRepository $salesrepConfigRepo,
+        private readonly EntityRepository    $orderRepo,
+        private readonly EntityRepository    $userRepo,
+        private readonly EntityRepository    $salesAgentConfigRepo,
         private readonly SystemConfigService $systemConfig,
-        private readonly AgentResolver $agentResolver,
-        private readonly NumberResolver $nums,
-        private readonly DiscountCalculator $discounts,
-        private readonly CommissionUpserter $upserter,
+        private readonly AgentResolver       $agentResolver,
+        private readonly NumberResolver      $nums,
+        private readonly DiscountCalculator  $discounts,
+        private readonly CommissionUpserter  $upserter,
         private readonly ClaimedAgentResolver $claimedAgentResolver,
-        private readonly Connection $connection
+        private readonly Connection          $connection
     ) {
     }
 
-    public function recalcForOrderId(string $orderId, Context $context): void
+    public function recalcForOrderId(string $orderId, Context $context, float $commissionMultiplier = 1.0): void
     {
         if (!Uuid::isValid($orderId)) {
             return;
         }
+
+        $commissionMultiplier = max(0.0, min(1.0, $commissionMultiplier));
 
         $criteria = (new Criteria([$orderId]))
             ->addAssociation('lineItems')
@@ -68,38 +74,38 @@ final class OrderCommissionRecalculator
             return;
         }
 
-        /** @var SalesrepConfigEntity|null $agentCfg */
-        $agentCfg = $this->salesrepConfigRepo
-            ->search((new Criteria())->addFilter(new EqualsFilter('userId', $agentUserId)), $context)
+        /** @var SalesAgentConfigEntity|null $agentCfg */
+        $agentCfg = $this->salesAgentConfigRepo
+            ->search((new Criteria())->addFilter(new EqualsFilter('userId', $agentUserId))->setLimit(1), $context)
             ->first();
 
         /** @var UserEntity|null $agentUser */
         $agentUser = $this->userRepo->search(new Criteria([$agentUserId]), $context)->first();
         $agentUserCf = $agentUser?->getCustomFields() ?? [];
 
-        $isSalesrep =
+        $isSalesAgent =
             ($agentCfg !== null) ||
-            (($agentUserCf['salesrep'] ?? false) === true || (string)($agentUserCf['salesrep'] ?? '') === '1');
+            (($agentUserCf['sales_agent'] ?? $agentUserCf['is_sales_agent'] ?? false) === true || (string)($agentUserCf['sales_agent'] ?? $agentUserCf['is_sales_agent'] ?? '') === '1');
 
-        if (!$isSalesrep) {
+        if (!$isSalesAgent) {
             $this->zeroOutLive($orderId, $context);
             return;
         }
 
         $commissionPercentage = $this->nums->resolveFloat(
             $agentCfg?->getCommissionPercentage(),
-            'Salesrep.config.commissionPercentage',
+            'SalesAgent.config.commissionPercentage',
             $salesChannelId
         );
 
         $discountLimit = $this->nums->resolveFloat(
             $agentCfg?->getDiscountLimit(),
-            'Salesrep.config.discountLimit',
+            'SalesAgent.config.discountLimit',
             $salesChannelId
         );
 
         $excludedEmails = $this->normalizeExcludedEmails(
-            $this->systemConfig->get('Salesrep.config.excludedEmails', $salesChannelId)
+            $this->systemConfig->get('SalesAgent.config.excludedEmails', $salesChannelId)
         );
 
         $agentEmail = $agentUser ? mb_strtolower((string)$agentUser->getEmail()) : null;
@@ -114,29 +120,10 @@ final class OrderCommissionRecalculator
             ? 0.0
             : (($effectiveDiscountPercent >= $discountLimit) ? 0.0 : (float)$commissionPercentage);
 
-        $netSubtotal = 0.0;
-        foreach ($order->getLineItems() ?? [] as $item) {
-            if ($item->getType() !== 'product') {
-                continue;
-            }
-
-            $price = $item->getPrice();
-            if ($price === null) {
-                continue;
-            }
-
-            $netPrice = (float) $price->getTotalPrice();
-
-            if (\method_exists($price, 'getCalculatedTaxes') && $price->getCalculatedTaxes() && $price->getCalculatedTaxes()->count() > 0) {
-                foreach ($price->getCalculatedTaxes() as $tax) {
-                    $netPrice -= (float) $tax->getTax();
-                }
-            }
-
-            $netSubtotal += max($netPrice, 0.0);
-        }
+        $netSubtotal = $this->computeCommissionBaseSubtotal($order);
 
         $commissionTotal = ($netSubtotal * $commissionPercentApplied) / 100.0;
+        $commissionTotal *= $commissionMultiplier;
 
         $orderCf = $order->getCustomFields() ?? [];
         $splitEmail = trim((string)($orderCf[self::CF_SPLIT_EMAIL] ?? ''));
@@ -144,13 +131,20 @@ final class OrderCommissionRecalculator
         $splitPercent = max(0.0, min(100.0, $splitPercent));
 
         $splitAmount = 0.0;
+        $splitAgentId = null;
         if ($splitEmail !== '' && $splitPercent > 0.0) {
             $splitAmount = $commissionTotal * ($splitPercent / 100.0);
+            $splitAgentId = $this->resolveSplitAgentIdByEmail($splitEmail, $context);
+            if ($splitAgentId === $agentUserId) {
+                $splitAgentId = null;
+                $splitAmount = 0.0;
+            }
         }
 
         $mainCommission = $commissionTotal - $splitAmount;
 
         $commissionAmount = round(max(0.0, $mainCommission), 2);
+        $splitAmount = round(max(0.0, $splitAmount), 2);
 
         $context->scope(Context::SYSTEM_SCOPE, function (Context $system) use (
             $orderId,
@@ -158,9 +152,13 @@ final class OrderCommissionRecalculator
             $effectiveDiscountPercent,
             $commissionPercentApplied,
             $commissionAmount,
-            $excludedByAgent
+            $excludedByAgent,
+            $splitAmount,
+            $splitAgentId,
+            $splitEmail,
+            $splitPercent
         ): void {
-            $this->upserter->upsertByOrderId([[
+            $payloads = [[
                 '_resolve_by_order_id'      => $orderId,
                 'orderId'                   => $orderId,
                 'orderVersionId'            => Defaults::LIVE_VERSION,
@@ -169,7 +167,27 @@ final class OrderCommissionRecalculator
                 'commissionPercentApplied'  => (float) $commissionPercentApplied,
                 'commissionAmount'          => (float) $commissionAmount,
                 'excludedByAgentEmail'      => (bool) $excludedByAgent,
-            ]], $system);
+            ]];
+
+            $keepAgentIds = [$agentUserId];
+
+            if ($splitAgentId !== null) {
+                $payloads[] = [
+                    '_resolve_by_order_id'      => $orderId,
+                    'orderId'                   => $orderId,
+                    'orderVersionId'            => Defaults::LIVE_VERSION,
+                    'agentId'                   => $splitAgentId,
+                    'effectiveDiscountPercent'  => (float) $effectiveDiscountPercent,
+                    'commissionPercentApplied'  => (float) $commissionPercentApplied,
+                    'commissionAmount'          => (float) $splitAmount,
+                    'excludedByAgentEmail'      => false,
+                ];
+                $keepAgentIds[] = $splitAgentId;
+            }
+
+            $this->upserter->upsertByOrderId($payloads, $system);
+            $this->upserter->zeroOutByOrderIdExcludingAgents($orderId, $keepAgentIds, $system);
+            $this->writeSplitMeta($orderId, $splitEmail, $splitPercent, $splitAmount, $splitAgentId, $system);
         });
     }
 
@@ -191,7 +209,7 @@ final class OrderCommissionRecalculator
             return null;
         }
 
-        $cfg = $this->salesrepConfigRepo
+        $cfg = $this->salesAgentConfigRepo
             ->search((new Criteria())->addFilter(new EqualsFilter('userId', $claimedUserId))->setLimit(1), $context)
             ->first();
 
@@ -202,12 +220,12 @@ final class OrderCommissionRecalculator
     {
         $cf = $order->getCustomFields() ?? [];
 
-        $createdBySalesrep = $cf[self::CF_CREATED_BY_SALESREP] ?? false;
-        $createdBySalesrep = ($createdBySalesrep === true || $createdBySalesrep === 1 || $createdBySalesrep === '1');
+        $createdBySalesAgent = $cf[self::CF_CREATED_BY_SALES_AGENT] ?? false;
+        $createdBySalesAgent = ($createdBySalesAgent === true || $createdBySalesAgent === 1 || $createdBySalesAgent === '1');
 
-        $createdBySalesrepId = $cf[self::CF_CREATED_BY_SALESREP_ID] ?? null;
-        if ($createdBySalesrep && \is_string($createdBySalesrepId) && $createdBySalesrepId !== '' && Uuid::isValid($createdBySalesrepId)) {
-            return $createdBySalesrepId;
+        $createdBySalesAgentId = $cf[self::CF_CREATED_BY_SALES_AGENT_ID] ?? null;
+        if ($createdBySalesAgent && \is_string($createdBySalesAgentId) && $createdBySalesAgentId !== '' && Uuid::isValid($createdBySalesAgentId)) {
+            return $createdBySalesAgentId;
         }
 
         $createdById = $order->getCreatedById();
@@ -220,7 +238,7 @@ final class OrderCommissionRecalculator
             return $raw;
         }
 
-        if ($createdBySalesrep) {
+        if ($createdBySalesAgent) {
             $acting = $this->agentResolver->resolve($context);
             if (\is_string($acting) && $acting !== '' && Uuid::isValid($acting)) {
                 return $acting;
@@ -234,7 +252,60 @@ final class OrderCommissionRecalculator
     {
         $context->scope(Context::SYSTEM_SCOPE, function (Context $system) use ($orderId): void {
             $this->upserter->zeroOutByOrderId($orderId, $system);
+            $this->writeSplitMeta($orderId, '', 0.0, 0.0, null, $system);
         });
+    }
+
+    private function resolveSplitAgentIdByEmail(string $email, Context $context): ?string
+    {
+        $email = strtolower(trim($email));
+        if ($email === '') {
+            return null;
+        }
+
+        /** @var UserEntity|null $splitUser */
+        $splitUser = $this->userRepo->search(
+            (new Criteria())->addFilter(new EqualsFilter('email', $email))->setLimit(1),
+            $context
+        )->first();
+
+        $splitId = $splitUser?->getId();
+        return (\is_string($splitId) && Uuid::isValid($splitId)) ? $splitId : null;
+    }
+
+    private function writeSplitMeta(
+        string $orderId,
+        string $splitEmail,
+        float $splitPercent,
+        float $splitAmount,
+        ?string $splitAgentId,
+        Context $context
+    ): void {
+        $internal = clone $context;
+        $internal->addState(self::CTX_STATE_SKIP_SPLIT_RECOMPUTE);
+
+        /** @var OrderEntity|null $fresh */
+        $fresh = $this->orderRepo->search(new Criteria([$orderId]), $internal)->first();
+        if (!$fresh instanceof OrderEntity) {
+            return;
+        }
+
+        $cf = $fresh->getCustomFields() ?? [];
+
+        if ($splitAgentId !== null && $splitAmount > 0.0) {
+            $cf[self::CF_SPLIT_EMAIL] = $splitEmail;
+            $cf[self::CF_SPLIT_PERCENT] = max(0.0, min(100.0, $splitPercent));
+            $cf[self::CF_SPLIT_AMOUNT] = $splitAmount;
+            $cf[self::CF_COMMISSION_SPLIT] = $splitAmount;
+            $cf[self::CF_SPLIT_AGENT_ID] = $splitAgentId;
+        } else {
+            unset($cf[self::CF_SPLIT_AMOUNT], $cf[self::CF_COMMISSION_SPLIT], $cf[self::CF_SPLIT_AGENT_ID]);
+        }
+
+        $this->orderRepo->update([[
+            'id' => $orderId,
+            'customFields' => $cf,
+        ]], $internal);
     }
 
     private function normalizeExcludedEmails(mixed $value): array
@@ -254,6 +325,34 @@ final class OrderCommissionRecalculator
         $emails = array_values(array_unique(array_filter($emails)));
 
         return $emails;
+    }
+
+    private function computeCommissionBaseSubtotal(OrderEntity $order): float
+    {
+        $productNetSubtotal = 0.0;
+        $promotionNetDiscount = 0.0;
+
+        foreach ($order->getLineItems() ?? [] as $item) {
+            $price = $item->getPrice();
+            if ($price === null) {
+                continue;
+            }
+
+            $lineNetTotal = (float) $price->getTotalPrice();
+
+            $type = (string) $item->getType();
+
+            if ($type === 'product') {
+                $productNetSubtotal += max($lineNetTotal, 0.0);
+                continue;
+            }
+
+            if (($type === 'promotion' || $type === 'discount') && $lineNetTotal < 0.0) {
+                $promotionNetDiscount += abs($lineNetTotal);
+            }
+        }
+
+        return max(0.0, $productNetSubtotal - $promotionNetDiscount);
     }
 
     private function getOrderCreatedByIdRaw(string $orderId): ?string

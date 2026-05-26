@@ -1,6 +1,6 @@
 
 {
-    "salesrep": {
+    "sales-king": {
       "dashboard": {
         "customerColumns": {
           "fullName": "Name",
@@ -44,10 +44,10 @@
         "kpiSubtitle":"Total commission across all orders for your account"
       }
     },
-      "salesrep-settings": {
+      "sales-agent-settings": {
         "general": {
-          "menuTitle": "Salesrep ",
-          "moduleDescription": "Configure Salesrep Agent commissions and exclusions",
+          "menuTitle": "Sales Agent",
+          "moduleDescription": "Configure Sales Agent commissions and exclusions",
           "save": "Save",
           "salesChannel": "Sales channel",
           "selectSalesChannel": "Select sales channel",
@@ -57,7 +57,7 @@
         "fields": {
           "excludedEmails": {
             "label": "Excluded emails",
-            "help": "Comma-separated list of salesrep agent emails to exclude from commissions."
+            "help": "Comma-separated list of sales agent emails to exclude from commissions."
           },
           "commissionPercentage": {
             "label": "Total commission percentage (%)",
@@ -71,11 +71,23 @@
       },
       "sw-privileges":{
         "permissions":{
-           "salesrep": {
-             "label": "Salesrep"
+           "sales_king": {
+             "label": "Sales Agent"
          }
        }
-     }
+     },
+  "sales-agent": {
+    "customerConvert": {
+      "buttonLabel": "Zu Benutzer konvertieren",
+      "modalTitle": "Gastkonto in registrierten Benutzer umwandeln",
+      "modalMessage": "Das Gastkonto wird in einen registrierten Benutzer umgewandelt und eine E-Mail zum Zurücksetzen des Passworts wird versendet. Fortfahren?",
+      "modalConfirm": "Konvertieren & E-Mail senden",
+      "successTitle": "Konto konvertiert",
+      "successMessage": "Das Gastkonto wurde in einen registrierten Benutzer umgewandelt und eine E-Mail zum Zurücksetzen des Passworts wurde versendet.",
+      "errorTitle": "Konvertierung fehlgeschlagen",
+      "errorMessage": "Beim Konvertieren des Gastkontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      "errorDuplicate": "Ein registriertes Konto mit dieser E-Mail-Adresse existiert bereits. Das Gastkonto kann nicht konvertiert werden.",
+      "duplicateModalTitle": "E-Mail bereits registriert"
+    }
   }
-  
-  
+}

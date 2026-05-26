@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Controller;
+namespace SalesAgent\Controller;
 
-use Salesrep\Service\OrderCommissionRecalculator;
+use SalesAgent\Service\OrderCommissionRecalculator;
 use Shopware\Core\Framework\Api\Context\AdminApiSource;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -27,8 +27,8 @@ final class OrderClaimController extends AbstractController
     }
 
     #[Route(
-        path: '/api/_action/salesrep/order/claim',
-        name: 'api.action.salesrep.order.claim',
+        path: '/api/_action/sales-agent/order/claim',
+        name: 'api.action.sales_agent.order.claim',
         methods: ['POST'],
         defaults: ['_acl' => ['order.editor']]
     )]
@@ -54,17 +54,17 @@ final class OrderClaimController extends AbstractController
         }
 
         $cf = [
-            'salesrep_claim_reason' => $reason,
+            'sales_agent_claim_reason' => $reason,
         ];
 
         if ($agentUserId === '') {
-            $cf['salesrep_claimed_user_id'] = null;
-            $cf['salesrep_claimed_by_user_id'] = null;
-            $cf['salesrep_claimed_at'] = null;
+            $cf['sales_agent_claimed_user_id'] = null;
+            $cf['sales_agent_claimed_by_user_id'] = null;
+            $cf['sales_agent_claimed_at'] = null;
         } else {
-            $cf['salesrep_claimed_user_id'] = $agentUserId;
-            $cf['salesrep_claimed_by_user_id'] = $managerId;
-            $cf['salesrep_claimed_at'] = (new \DateTimeImmutable())->format(DATE_ATOM);
+            $cf['sales_agent_claimed_user_id'] = $agentUserId;
+            $cf['sales_agent_claimed_by_user_id'] = $managerId;
+            $cf['sales_agent_claimed_at'] = (new \DateTimeImmutable())->format(DATE_ATOM);
         }
 
         $this->orderRepo->update([[

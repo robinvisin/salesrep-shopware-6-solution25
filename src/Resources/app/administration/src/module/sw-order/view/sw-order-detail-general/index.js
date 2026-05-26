@@ -15,7 +15,7 @@ Component.override('sw-order-detail-general', {
       claimReqLoading: false,
       claimReqSubmitting: false,
 
-      claimReqStatus: 'none', // none | pending | approved
+      claimReqStatus: 'none',
       claimReqId: '',
       claimReqRequestedAt: '',
       claimReqReason: '',
@@ -32,22 +32,24 @@ Component.override('sw-order-detail-general', {
     },
 
     currentUser() {
-      // Works in admin
       return Shopware.State.get('session')?.currentUser || null;
     },
 
     isSalesAgentUser() {
       const cf = this.currentUser?.customFields || {};
       const v =
-        cf.is_salesrep ??
-        cf.salesrep ??
+        cf.is_sales_agent ??
+        cf.sales_agent ??
         false;
 
       return v === true || v === 1 || v === '1';
     },
-
+      isOrderCancelled() {
+          const techName = this.order?.stateMachineState?.technicalName;
+          return techName === 'cancelled';
+      },
     claimReqRepo() {
-      return this.repositoryFactory.create('salesrep_order_claim_request');
+      return this.repositoryFactory.create('sales_agent_order_claim_request');
     },
   },
 
@@ -61,10 +63,9 @@ Component.override('sw-order-detail-general', {
     order: {
       immediate: true,
       handler(order) {
-        // if approved claim is already on order custom fields, reflect it immediately
         const cf = order?.customFields || {};
-        const claimedUserId = (cf.salesrep_claimed_user_id || '').toString();
-        const claimedAt = (cf.salesrep_claimed_at || '').toString();
+        const claimedUserId = (cf.sales_agent_claimed_user_id || '').toString();
+        const claimedAt = (cf.sales_agent_claimed_at || '').toString();
 
         if (claimedUserId && claimedAt) {
           this.claimReqStatus = 'approved';
@@ -80,17 +81,15 @@ Component.override('sw-order-detail-general', {
 
       this.claimReqLoading = true;
       try {
-        // 1) if order already has approved claim, we’re done
         const cf = this.order?.customFields || {};
-        const claimedUserId = (cf.salesrep_claimed_user_id || '').toString();
-        const claimedAt = (cf.salesrep_claimed_at || '').toString();
+        const claimedUserId = (cf.sales_agent_claimed_user_id || '').toString();
+        const claimedAt = (cf.sales_agent_claimed_at || '').toString();
         if (claimedUserId && claimedAt) {
           this.claimReqStatus = 'approved';
           this.claimReqApprovedUserId = claimedUserId;
           return;
         }
 
-        // 2) check if there is a pending request for this order
         const c = new Criteria(1, 1);
         c.addFilter(Criteria.equals('orderId', this.orderId));
         c.addFilter(Criteria.equals('orderVersionId', Shopware.Context.api.liveVersionId));

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Subscriber;
+namespace SalesAgent\Subscriber;
 
 use Shopware\Core\Checkout\Customer\Event\CustomerBeforeLoginEvent;
 use Shopware\Core\Checkout\Customer\Event\CustomerLoginEvent;
@@ -25,5 +25,7 @@ class CustomerLoginSubscriber implements EventSubscriberInterface
 
     public function onCustomerBeforeLogin(CustomerBeforeLoginEvent $event): void
     {
+
     }
+
 }

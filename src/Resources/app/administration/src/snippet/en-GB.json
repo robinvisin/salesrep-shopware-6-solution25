@@ -1,5 +1,5 @@
 {
-  "salesrep": {
+  "sales-king": {
     "all-time-earnings": {
       "title": "All-time Earnings",
       "subtitle": "Overview of your total commissions across all time",
@@ -64,17 +64,17 @@
       "save": "Save"
     }
   },
-    "salesrep-claim-requests": {
+    "sales-agent-claim-requests": {
       "general": {
         "mainMenuItemGeneral": "Claim requests",
         "descriptionTextModule": "Approve/reject commission claim requests"
       }
     },
   
-  "salesrep-settings": {
+  "sales-agent-settings": {
     "general": {
-      "menuTitle": "Salesrep",
-      "moduleDescription": "Configure Salesrep Agent commissions and exclusions",
+      "menuTitle": "Sales Agent",
+      "moduleDescription": "Configure Sales Agent commissions and exclusions",
       "save": "Save",
       "salesChannel": "Sales channel",
       "selectSalesChannel": "Select sales channel",
@@ -84,7 +84,7 @@
     "fields": {
       "excludedEmails": {
         "label": "Excluded emails",
-        "help": "Comma-separated list of salesrep agent emails to exclude from commissions."
+        "help": "Comma-separated list of sales agent emails to exclude from commissions."
       },
       "commissionPercentage": {
         "label": "Total commission percentage (%)",
@@ -107,11 +107,11 @@
       "lae_loyalty_points": {
         "label": "Loyalty Points"
       },
-      "salesrep": {
-        "label": "Salesrep"
+      "sales_king": {
+        "label": "Sales Agent"
       },
       "parents": {
-        "salesrep": "Salesrep"
+        "sales_king": "Sales King"
       },
       "abandoned_cart": {
         "label": "Abandoned carts"
@@ -125,11 +125,11 @@
       "order_light": {
         "label": "Order (light access)"
       },
-      "salesrep_commission": {
-        "label": "Salesrep agent commissions"
+      "sales_agent_commission": {
+        "label": "Sales agent commissions"
       },
-      "salesrep_config": {
-        "label": "Salesrep agent configuration"
+      "sales_agent_config": {
+        "label": "Sales agent configuration"
       },
       "media": {
         "label": "Media"
@@ -148,8 +148,8 @@
       }
     },
     "additional_permissions": {
-      "salesrep": {
-        "label": "Salesrep",
+      "sales_king": {
+        "label": "Sales King",
         "price_override": "Override prices"
       }
     }
@@ -188,9 +188,23 @@
     "reminderNotePlaceholder": "Add a short message or note (optional)",
     "reminderSendButton": "Send reminder"
   },
+  "sales-agent": {
+    "customerConvert": {
+      "buttonLabel": "Convert to User",
+      "modalTitle": "Convert Guest to Registered User",
+      "modalMessage": "This will convert the guest account into a registered user. Continue?",
+      "modalConfirm": "Convert User",
+      "successTitle": "Account Converted",
+      "successMessage": "The guest account has been converted to a registered user and a password reset email has been sent.",
+      "errorTitle": "Conversion Failed",
+      "errorMessage": "An error occurred while converting the guest account. Please try again.",
+      "errorDuplicate": "A registered account with this email address already exists. The guest account cannot be converted.",
+      "duplicateModalTitle": "Email Already Registered"
+    }
+  },
   "global": {
     "entities": {
-      "salesrep_abandoned_cart": "Abandoned Carts | Abandoned Carts"
+      "sales_agent_abandoned_cart": "Abandoned Carts | Abandoned Carts"
     }
   }
 }

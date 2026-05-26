@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Content\OrderClaimRequest;
+namespace SalesAgent\Core\Content\OrderClaimRequest;
 
 use Shopware\Core\Checkout\Order\OrderDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
@@ -22,7 +22,7 @@ use Shopware\Core\System\User\UserDefinition;
 
 final class OrderClaimRequestDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'salesrep_order_claim_request';
+    public const ENTITY_NAME = 'sales_agent_order_claim_request';
 
     public function getEntityName(): string
     {

@@ -1,4 +1,4 @@
-import { Abandoned, ensureAbandonedStore } from '../../../../state/salesrep-abandoned.state';
+import { Abandoned, ensureAbandonedStore } from '../../../../state/sales-agent-abandoned.state';
 
 const { Component, State, Service, Mixin } = Shopware;
 const { Criteria } = Shopware.Data;
@@ -21,6 +21,12 @@ const getAdminBearer = () => {
     );
   } catch { return ''; }
 };
+const getOrigMap = () => {
+    if (!window.__SA_ORIG_UNIT_BY_PRODUCT__) window.__SA_ORIG_UNIT_BY_PRODUCT__ = new Map();
+    return window.__SA_ORIG_UNIT_BY_PRODUCT__;
+};
+
+const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 Component.override('sw-order-line-items-grid-sales-channel', {
   inject: ['repositoryFactory', 'orderService', 'systemConfigApiService'],
@@ -92,18 +98,18 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     },
 },
   beforeDestroy() {
-    try { if (typeof this.__unsubscribeSw === 'function') this.__unsubscribeSw(); } catch(e) {console.warn('[AbandonedMini] unsubscribe error:', e);}
+    try { if (typeof this.__unsubscribeSw === 'function') this.__unsubscribeSw(); } catch {}
   },
 
   methods: {
     async fetchSystemConfig() {
         try {
-            const values = await this.systemConfigApiService.getValues('Salesrep.config');
+            const values = await this.systemConfigApiService.getValues('SalesAgent.config');
 
             this.systemConfig = {
                 userId: null,
-                commission: values?.['Salesrep.config.commissionPercentage'] ?? 0,
-                discountLimit: values?.['Salesrep.config.discountLimit'] ?? 0,
+                commission: values?.['SalesAgent.config.commissionPercentage'] ?? 0,
+                discountLimit: values?.['SalesAgent.config.discountLimit'] ?? 0,
                 createdAt: null,
             };
         } catch (e) {
@@ -117,7 +123,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     },
     async fetchAgentConfig() {
         try {
-            const repo = this.repositoryFactory.create('salesrep_config');
+            const repo = this.repositoryFactory.create('sales_agent_config');
             const userId = Shopware.State.get('session')?.currentUser?.id;
             if (!userId) {
                 this.agentConfig = null;
@@ -144,45 +150,78 @@ Component.override('sw-order-line-items-grid-sales-channel', {
         }
     },
 
-    checkItemPrice(price, item) {
-        const cfg = this.effectiveConfig;
+      checkItemPrice(price, item) {
+          const cfg = this.effectiveConfig;
 
-        if (!item?.price || !item?.priceDefinition) {
-            return;
-        }
+          if (!item?.priceDefinition) return;
+          if (!item.payload) item.payload = {};
 
-        const limit = cfg.discountLimit ?? 0;
-        const original = item.payload?.saOriginalUnitPrice ?? item.price.unitPrice;
+          const limit = Number(String(cfg.discountLimit ?? 0).replace(',', '.')) || 0;
 
-        if (!original || original <= 0) {
-            item.priceDefinition.price = price;
-            return;
-        }
+          const pid = String(item?.referencedId || item?.payload?.productId || '');
+          const origMap = getOrigMap();
 
-        const discountPercent = ((original - price) / original) * 100;
+          const currentUnit = Number(item?.price?.unitPrice) || Number(item?.priceDefinition?.price);
 
-        if (price > original) {
-            this.createNotificationError({
-                title: 'Invalid Price Change',
-                message: 'You cannot increase the price above the original value.',
-            });
-            item.priceDefinition.price = original;
-            return;
-        }
+          let original =
+              Number(item?.payload?.saOriginalUnitPrice) ||
+              (pid ? Number(origMap.get(pid)) : NaN) ||
+              currentUnit;
 
-        if (discountPercent > limit) {
-            const allowedPrice = original - (original * limit / 100);
-            this.createNotificationError({
-                title: 'Discount Limit Exceeded',
-                message: `You can only apply up to ${limit}% discount.`,
-            });
-            item.priceDefinition.price = allowedPrice;
-            return;
-        }
+          if (Number.isFinite(original) && original > 0) {
+              item.payload.saOriginalUnitPrice = original;
+              if (pid) origMap.set(pid, original);
+          }
 
-        item.priceDefinition.price = price;
-    },
-    __rebuildLiMapFromCart(lineItems) {
+          const newPrice = Number(String(price).replace(',', '.'));
+          if (!Number.isFinite(newPrice) || newPrice < 0) {
+              item.priceDefinition.price = round2(original);
+              item.payload.saFinalUnitPrice = null;
+              item.payload.saCustomPrice = null;
+              return;
+          }
+
+          if (newPrice > original + 1e-6) {
+              this.createNotificationError({
+                  title: 'Invalid Price Change',
+                  message: 'You cannot increase the price above the original value.',
+              });
+              item.priceDefinition.price = round2(original);
+              item.payload.saFinalUnitPrice = null;
+              item.payload.saCustomPrice = null;
+              return;
+          }
+
+          if (limit > 0) {
+              const minAllowed = original * (1 - limit / 100);
+              if (newPrice + 1e-8 < minAllowed) {
+                  const allowed = round2(minAllowed);
+                  this.createNotificationError({
+                      title: 'Discount Limit Exceeded',
+                      message: `You can only apply up to ${limit}% discount.`,
+                  });
+
+                  item.priceDefinition.price = allowed;
+
+                  item.payload.saFinalUnitPrice = allowed;
+                  item.payload.saCustomPrice = allowed;
+
+                  const userId = Shopware.State.get('session')?.currentUser?.id;
+                  if (userId) item.payload.saEditedByAgentId = userId;
+
+                  return;
+              }
+          }
+
+          item.priceDefinition.price = round2(newPrice);
+          item.payload.saFinalUnitPrice = round2(newPrice);
+          item.payload.saCustomPrice = round2(newPrice);
+
+          const userId = Shopware.State.get('session')?.currentUser?.id;
+          if (userId) item.payload.saEditedByAgentId = userId;
+      },
+
+      __rebuildLiMapFromCart(lineItems) {
       this.__liProductMap.clear();
       if (!Array.isArray(lineItems)) return;
       for (const li of lineItems) {
@@ -215,6 +254,9 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     _patchHttpOnce() {
       if (window.__AB_HTTP_PATCHED__) { this.__httpPatched = true; return; }
 
+        const routeName = String(this.$route?.name || '');
+        if (!routeName.includes('sw.order')) return;
+
       const http = this.orderService?.httpClient || Service?.('httpClient');
       if (!http || typeof http.post !== 'function') return;
 
@@ -230,10 +272,13 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       const normalizeArrayItem = (obj) => {
         if (!obj || typeof obj !== 'object') return obj;
 
-        if (!obj.type) obj.type = 'product';
+          const looksLikeProduct = isUuid(obj.referencedId) || isUuid(obj.payload?.productId);
+          if (!looksLikeProduct && obj.type && obj.type !== 'product') return obj;
+          if (!obj.type && !looksLikeProduct) return obj;
+          if (!obj.type) obj.type = 'product';
 
-        const liId = String(obj.id || '');
-        const ref  = String(obj.referencedId || '');
+          const liId = String(obj.id || '');
+          const ref  = String(obj.referencedId || '');
 
         const badRef = !isUuid(ref) || ref === liId;
         if (badRef && liId) {
@@ -245,8 +290,8 @@ Component.override('sw-order-line-items-grid-sales-channel', {
           }
         }
 
-        const unit = this.__extractUnitPrice(obj);
-        if (Number.isFinite(unit)) {
+          const unit = this.__extractUnitPrice(obj);
+          if (obj.type === 'product' && Number.isFinite(unit)) {
           const rules =
             (Array.isArray(obj?.priceDefinition?.taxRules) && obj.priceDefinition.taxRules.length > 0)
               ? obj.priceDefinition.taxRules
@@ -311,20 +356,16 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       ensureAbandonedStore();
       const payload = Abandoned.get();
     
-      // Nothing to apply
       if (!payload || !Array.isArray(payload.lineItems) || !payload.lineItems.length) return;
     
       const wanted = String(payload.customerId || '');
       if (!wanted) return;
     
-      // ✅ Don't "one-shot" forever. Only skip if we already applied for THIS customer.
       if (this.__abApplied && this.__abAppliedForCustomer === wanted) return;
     
-      // Allow re-apply when customer changes
       this.__abApplied = false;
       this.__abAppliedForCustomer = wanted;
     
-      // Wait until swOrder.customer is the one we navigated with
       for (let i = 0; i < 40; i++) {
         const cur = String(State.get('swOrder')?.customer?.id || '');
         if (cur && cur === wanted) break;
@@ -335,7 +376,6 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       const { scId, tokenReady, token } = await this._ensureCartContext();
       if (!(scId && tokenReady && token)) return;
     
-      // Add items
       for (const li of payload.lineItems) {
         const qty = Number(li.quantity || li.payload?.quantity || 1) || 1;
     
@@ -354,7 +394,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     
       try {
         await State.dispatch('swOrder/loadCart', { salesChannelId: scId });
-      } catch (e) {console.warn('[AbandonedMini] loadCart error:', e);}
+      } catch (e) {}
     
       this.__rebuildLiMapFromCart(State.get('swOrder')?.cartLineItems || []);
     
@@ -393,10 +433,10 @@ Component.override('sw-order-line-items-grid-sales-channel', {
             const newToken = res?.token || res?.contextToken;
             if (newToken) {
               token = newToken;
-              try { State.commit('swOrder/setContextToken', newToken); } catch(e) {console.warn('[AbandonedMini] setContextToken error:', e);}
+              try { State.commit('swOrder/setContextToken', newToken); } catch {}
             }
           }
-        } catch(e) {console.warn('[AbandonedMini] createCart error:', e); }
+        } catch { }
       }
 
       token =

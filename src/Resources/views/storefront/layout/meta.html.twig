@@ -1,0 +1,11 @@
+{% sw_extends '@Storefront/storefront/layout/meta.html.twig' %}
+
+{% block layout_head_meta_tags %}
+    {{ parent() }}
+
+    {% set activeCategory = page.header.navigation.active ?? null %}
+
+    {% if activeCategory and (activeCategory.customFields.sales_agent_only_category ?? false) %}
+        <meta name="robots" content="noindex, nofollow">
+    {% endif %}
+{% endblock %}

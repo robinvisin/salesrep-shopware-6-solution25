@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Migration;
+namespace SalesAgent\Migration;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
@@ -10,7 +10,7 @@ use Shopware\Core\Framework\Uuid\Uuid;
 
 final class Migration1734860000AddOrderClaimCustomFields extends MigrationStep
 {
-    private const SET_NAME = 'salesrep_order_claim';
+    private const SET_NAME = 'sales_agent_order_claim';
     private const ENTITY   = 'order';
 
     public function getCreationTimestamp(): int
@@ -24,7 +24,7 @@ final class Migration1734860000AddOrderClaimCustomFields extends MigrationStep
 
         $this->ensureSetRelation($connection, $setId, self::ENTITY);
 
-        $this->upsertField($connection, $setId, 'salesrep_claimed_user_id', 'text', [
+        $this->upsertField($connection, $setId, 'sales_agent_claimed_user_id', 'text', [
             'label' => [
                 'en-GB' => 'Claimed sales agent (User ID)',
                 'de-DE' => 'Zugewiesener Sales Agent (User-ID)',
@@ -33,7 +33,7 @@ final class Migration1734860000AddOrderClaimCustomFields extends MigrationStep
             'customFieldType' => 'text',
         ]);
 
-        $this->upsertField($connection, $setId, 'salesrep_claimed_by_user_id', 'text', [
+        $this->upsertField($connection, $setId, 'sales_agent_claimed_by_user_id', 'text', [
             'label' => [
                 'en-GB' => 'Claimed by (Manager User ID)',
                 'de-DE' => 'Zugewiesen von (Manager User-ID)',
@@ -42,7 +42,7 @@ final class Migration1734860000AddOrderClaimCustomFields extends MigrationStep
             'customFieldType' => 'text',
         ]);
 
-        $this->upsertField($connection, $setId, 'salesrep_claimed_at', 'datetime', [
+        $this->upsertField($connection, $setId, 'sales_agent_claimed_at', 'datetime', [
             'label' => [
                 'en-GB' => 'Claimed at',
                 'de-DE' => 'Zugewiesen am',
@@ -51,7 +51,7 @@ final class Migration1734860000AddOrderClaimCustomFields extends MigrationStep
             'customFieldType' => 'datetime',
         ]);
 
-        $this->upsertField($connection, $setId, 'salesrep_claim_reason', 'text', [
+        $this->upsertField($connection, $setId, 'sales_agent_claim_reason', 'text', [
             'label' => [
                 'en-GB' => 'Claim reason',
                 'de-DE' => 'Grund der Zuweisung',

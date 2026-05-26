@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Content\OrderClaimRequest;
+namespace SalesAgent\Core\Content\OrderClaimRequest;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityIdTrait;

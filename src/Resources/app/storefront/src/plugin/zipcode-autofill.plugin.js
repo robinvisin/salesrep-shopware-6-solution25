@@ -1,9 +1,11 @@
-const PluginBaseClass = window.PlginBaseClass;
+import Plugin from 'src/plugin-system/plugin.class';
 
-export default class ZipcodeAutofillPlugin extends PluginBaseClass {
+
+export default class ZipcodeAutofillPlugin extends Plugin {
 
     init() {
         this.onZipChange = this.onZipChange.bind(this);
+        console.log('ZipcodeAutofillPlugin initialized');
         this.el.addEventListener('blur', this.onZipChange);
         this.el.addEventListener('change', this.onZipChange);
     }
@@ -57,7 +59,6 @@ export default class ZipcodeAutofillPlugin extends PluginBaseClass {
                 }
             }
         } catch (e) {
-            console.warn(e);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
 use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemEntity;
 use Shopware\Core\Checkout\Order\OrderEntity;

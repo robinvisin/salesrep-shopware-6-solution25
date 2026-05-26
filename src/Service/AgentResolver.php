@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Api\Context\AdminApiSource;
@@ -19,7 +19,7 @@ final class AgentResolver
 {
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly EntityRepository $salesrepConfigRepo
+        private readonly EntityRepository $salesAgentConfigRepo
     ) {
     }
 
@@ -60,24 +60,24 @@ final class AgentResolver
     {
         $cf = $order->getCustomFields() ?? [];
 
-        foreach (['salesrep_user_id', 'salesrep_agent_user_id'] as $k) {
+        foreach (['sales_agent_user_id', 'sales_agent_agent_user_id'] as $k) {
             $uid = $cf[$k] ?? null;
-            if (\is_string($uid) && $uid !== '' && Uuid::isValid($uid) && $this->isSalesrepUser($uid, $context)) {
+            if (\is_string($uid) && $uid !== '' && Uuid::isValid($uid) && $this->isSalesAgentUser($uid, $context)) {
                 return $uid;
             }
         }
 
         $createdById = $order->getCreatedById();
-        if (\is_string($createdById) && $createdById !== '' && Uuid::isValid($createdById) && $this->isSalesrepUser($createdById, $context)) {
+        if (\is_string($createdById) && $createdById !== '' && Uuid::isValid($createdById) && $this->isSalesAgentUser($createdById, $context)) {
             return $createdById;
         }
 
-        $createdBySalesrep = $cf['created_by_salesrep'] ?? false;
-        $createdBySalesAgent = ($createdBySalesrep === true || $createdBySalesrep === 1 || $createdBySalesrep === '1');
+        $createdBySalesAgent = $cf['created_by_sales_agent'] ?? false;
+        $createdBySalesAgent = ($createdBySalesAgent === true || $createdBySalesAgent === 1 || $createdBySalesAgent === '1');
 
-        if ($createdBySalesrep) {
+        if ($createdBySalesAgent) {
             $acting = $this->resolve($context);
-            if ($acting && Uuid::isValid($acting) && $this->isSalesrepUser($acting, $context)) {
+            if ($acting && Uuid::isValid($acting) && $this->isSalesAgentUser($acting, $context)) {
                 return $acting;
             }
         }
@@ -85,12 +85,12 @@ final class AgentResolver
         return null;
     }
 
-    private function isSalesrepUser(string $userId, Context $context): bool
+    private function isSalesAgentUser(string $userId, Context $context): bool
     {
         $criteria = (new Criteria())
             ->addFilter(new EqualsFilter('userId', $userId))
             ->setLimit(1);
 
-        return $this->salesrepConfigRepo->search($criteria, $context)->count() > 0;
+        return $this->salesAgentConfigRepo->search($criteria, $context)->count() > 0;
     }
 }

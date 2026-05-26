@@ -4,12 +4,11 @@
     {% set isAgent =
         (context.imitatingUserId is defined and context.imitatingUserId)
         or (context.customer and context.customer.customFields is defined
-            and (context.customer.customFields.salesrep ?? false) in [true, 1, '1'])
+            and (context.customer.customFields.sales_agent ?? false) in [true, 1, '1'])
     %}
-
     {% set cfT = shipping.translated.customFields ?? {} %}
     {% set cf  = shipping.customFields ?? {} %}
-    {% set isAgentOnly = (cfT.salesrep_only ?? cf.salesrep_only ?? 0) in [true, 1, '1'] %}
+    {% set isAgentOnly = (cfT.sales_agent_only ?? cf.sales_agent_only ?? 0) in [true, 1, '1'] %}
     {% set limit = page.extensions.saAgentCfg.discountLimit|default(0) %}
 
     {% set shippingCost = null %}
@@ -57,108 +56,121 @@
             </div>
 
             <script>
-            (function () {
+            (() => {
               if (window.__saShippingEditorInlineLoaded) return;
               window.__saShippingEditorInlineLoaded = true;
 
-              function bind(root) {
-                var nodes = (root || document).querySelectorAll('[data-sa-shipping-editor]');
-                if (!nodes || !nodes.length) return;
+              const toCents = (n) => Math.round((Number(n) + 1e-9) * 100);
+              const ceilToCents = (n) => Math.ceil((Number(n) + 1e-9) * 100);
 
-                nodes.forEach(function (el) {
+              const bind = (root) => {
+                const nodes = (root || document).querySelectorAll('[data-sa-shipping-editor]');
+                if (!nodes?.length) return;
+
+                nodes.forEach((el) => {
                   if (el.dataset.saBound === '1') return;
                   el.dataset.saBound = '1';
 
-                  var input = el.querySelector('.js-sa-shipping-input');
-                  var btn   = el.querySelector('.js-sa-shipping-apply');
-                  var err   = el.querySelector('.js-sa-shipping-error');
+                  const input = el.querySelector('.js-sa-shipping-input');
+                  const btn   = el.querySelector('.js-sa-shipping-apply');
+                  const err   = el.querySelector('.js-sa-shipping-error');
 
-                  var shippingId = el.dataset.shippingId;
-                  var orig  = parseFloat(el.dataset.orig || '0');
-                  var limit = parseFloat(el.dataset.limit || '0');
+                  const shippingId = el.dataset.shippingId;
+                  const orig  = parseFloat(el.dataset.orig || '0');
+                  const limit = parseFloat(el.dataset.limit || '0');
 
                   if (!input || !btn || !shippingId || !orig) return;
 
-                  function showError(msg) {
+                  const showError = (msg) => {
                     if (err) { err.textContent = msg; err.classList.remove('d-none'); }
-                    if (input) input.classList.add('is-invalid');
-                  }
-                  function clearError() {
+                    input.classList.add('is-invalid');
+                  };
+
+                  const clearError = () => {
                     if (err) { err.textContent = ''; err.classList.add('d-none'); }
-                    if (input) input.classList.remove('is-invalid');
-                  }
+                    input.classList.remove('is-invalid');
+                  };
 
                   if (!(limit > 0)) {
                     input.disabled = true;
                     btn.disabled = true;
                     showError('Discount is disabled for this shipping method.');
+                    return;
                   }
 
-                  btn.addEventListener('click', function (e) {
-                    e.preventDefault(); e.stopPropagation();
+                  btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     clearError();
 
-                    if (!(limit > 0)) {
-                      return showError('Discount is disabled for this shipping method.');
+                    const raw = (input.value || '').toString().trim().replace(',', '.');
+                    const val = parseFloat(raw);
+
+                    if (!Number.isFinite(val) || val < 0) {
+                      showError('Enter a valid price.');
+                      return;
                     }
 
-                    var raw = (input.value || '').toString().replace(',', '.');
-                    var val = parseFloat(raw);
+                    const valCents  = toCents(val);
+                    const origCents = toCents(orig);
 
-                    if (!isFinite(val) || val < 0) {
-                      return showError('Enter a valid price.');
-                    }
-                    if (val > orig + 1e-6) {
-                      return showError('Price cannot exceed ' + orig.toFixed(2) + '.');
+                    if (valCents > origCents) {
+                      showError(`Price cannot exceed ${(origCents / 100).toFixed(2)}.`);
+                      return;
                     }
 
-                    var minAllowed = orig * (1 - (limit / 100));
-                    if (val < (minAllowed - 1e-6)) {
-                      return showError('Too low. Minimum allowed is ' + minAllowed.toFixed(2) + '.');
-                    }
+                      if (limit > 0 && limit < 100) {
+                          const baseMin = orig * (1 - (limit / 100));
+                          const minAllowedCents = Math.max(0, ceilToCents(baseMin));
 
-                    (async function submit(price) {
-                      try {
-                        var headers = {
-                          'Content-Type': 'application/x-www-form-urlencoded',
-                          'X-Requested-With': 'XMLHttpRequest'
-                        };
-                        var csrf = document.querySelector('meta[name="csrf-token"]');
-                        if (csrf && csrf.getAttribute('content')) {
-                          headers['sw-csrf-token'] = csrf.getAttribute('content');
-                        }
-
-                        var body = new URLSearchParams({
-                          shippingId: String(shippingId),
-                          price: String(price)
-                        });
-
-                        var resp = await fetch('/salesrep/shipping/price', {
-                          method: 'POST',
-                          credentials: 'same-origin',
-                          headers: headers,
-                          body: body
-                        });
-
-                        if (!resp.ok) {
-                          var msg = 'Failed to apply shipping price.';
-                          try {
-                            var j = await resp.json();
-                            if (j && j.error) msg = j.error;
-                          } catch (_e) {}
-                          return showError(msg);
-                        }
-
-                        window.location.reload();
-                      } catch (_err) {
-                        showError('Network error applying shipping price.');
+                          if (valCents < minAllowedCents) {
+                              showError(`Too low. Minimum allowed is ${(minAllowedCents / 100).toFixed(2)}.`);
+                              return;
+                          }
                       }
-                    })(val);
+
+                    try {
+                      const headers = {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                      };
+
+                      const csrf = document.querySelector('meta[name="csrf-token"]');
+                      if (csrf?.getAttribute('content')) {
+                        headers['sw-csrf-token'] = csrf.getAttribute('content');
+                      }
+
+                      const body = new URLSearchParams({
+                        shippingId: String(shippingId),
+                        price: String(valCents / 100)
+                      });
+
+                      const resp = await fetch('/sales-agent/shipping/price', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers,
+                        body
+                      });
+
+                      if (!resp.ok) {
+                        let msg = 'Failed to apply shipping price.';
+                        try {
+                          const j = await resp.json();
+                          if (j?.error) msg = j.error;
+                        } catch (_e) {}
+                        showError(msg);
+                        return;
+                      }
+
+                      window.location.reload();
+                    } catch (_err) {
+                      showError('Network error applying shipping price.');
+                    }
                   });
                 });
-              }
+              };
 
-              function init(){ bind(document); }
+              const init = () => bind(document);
 
               if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init, { once: true });
@@ -168,16 +180,15 @@
 
               document.addEventListener('ajaxReloaded', init);
 
-              var mo = new MutationObserver(function (mutations) {
-                for (var i = 0; i < mutations.length; i++) {
-                  var m = mutations[i];
+              const mo = new MutationObserver((mutations) => {
+                for (const m of mutations) {
                   if (!m.addedNodes) continue;
-                  for (var j = 0; j < m.addedNodes.length; j++) {
-                    var n = m.addedNodes[j];
-                    if (n && n.nodeType === 1) bind(n);
+                  for (const n of m.addedNodes) {
+                    if (n?.nodeType === 1) bind(n);
                   }
                 }
               });
+
               mo.observe(document.documentElement, { childList: true, subtree: true });
             })();
             </script>

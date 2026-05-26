@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Migration;
+namespace SalesAgent\Migration;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
@@ -18,14 +18,14 @@ class Migration20251110AddAgentToCommissionUnique extends MigrationStep
     {
         // drop old unique on order_id
         $connection->executeStatement('
-            ALTER TABLE `salesrep_commission`
-            DROP INDEX `uniq.salesrep_commission.order_id`
+            ALTER TABLE `sales_agent_commission`
+            DROP INDEX `uniq.sales_agent_commission.order_id`
         ');
 
         // add new unique on (order_id, agent_id)
         $connection->executeStatement('
-            ALTER TABLE `salesrep_commission`
-            ADD UNIQUE `uniq.salesrep_commission.order_id_agent_id` (`order_id`, `agent_id`)
+            ALTER TABLE `sales_agent_commission`
+            ADD UNIQUE `uniq.sales_agent_commission.order_id_agent_id` (`order_id`, `agent_id`)
         ');
     }
 

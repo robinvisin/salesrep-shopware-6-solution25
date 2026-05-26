@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Checkout\AbandonedCart;
+namespace SalesAgent\Core\Checkout\AbandonedCart;
 
 use Doctrine\DBAL\Exception;
-use Salesrep\Core\Checkout\Cart\CartRepository;
+use SalesAgent\Core\Checkout\Cart\CartRepository;
 use Shopware\Core\Framework\Api\Context\SystemSource;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;

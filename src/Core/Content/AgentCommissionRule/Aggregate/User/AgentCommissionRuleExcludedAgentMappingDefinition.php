@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Content\AgentCommissionRule\Aggregate\User;
+namespace SalesAgent\Core\Content\AgentCommissionRule\Aggregate\User;
 
-use Salesrep\Core\Content\AgentCommissionRule\AgentCommissionRuleDefinition;
+use SalesAgent\Core\Content\AgentCommissionRule\AgentCommissionRuleDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FkField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\ApiAware;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\PrimaryKey;

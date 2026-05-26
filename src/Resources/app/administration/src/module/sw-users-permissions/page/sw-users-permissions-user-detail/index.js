@@ -1,14 +1,14 @@
 Shopware.Component.override('sw-users-permissions-user-detail', {
     data() {
         return {
-            __isSalesrepDetected: false,
-            __isCurrentUserSalesrep: false,
+            __isSalesAgentDetected: false,
+            __isCurrentUserSalesAgent: false,
         };
     },
 
     watch: {
         'user.aclRoles': {
-            handler() { this.__syncSalesrepFlag(); },
+            handler() { this.__syncSalesAgentFlag(); },
             deep: true,
         },
     },
@@ -17,7 +17,7 @@ Shopware.Component.override('sw-users-permissions-user-detail', {
         loadUser() {
             return this.$super('loadUser').then(() => {
                 this.__logAclRoles();
-                this.__syncSalesrepFlag();
+                this.__syncSalesAgentFlag();
             });
         },
 
@@ -27,22 +27,22 @@ Shopware.Component.override('sw-users-permissions-user-detail', {
             }
         },
 
-        __syncSalesrepFlag() {
+        __syncSalesAgentFlag() {
             if (!this.user) return;
             const roles = Array.isArray(this.user.aclRoles) ? this.user.aclRoles : [];
             const norm = s => (s || '').toString().trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '');
-            const hasSalesrep = roles.some(r => norm(r.name) === 'salesrep' || norm(r.technicalName) === 'salesrep');
+            const hasSalesAgent = roles.some(r => norm(r.name) === 'sales-agent' || norm(r.technicalName) === 'sales-agent');
 
             if (!this.user.customFields || typeof this.user.customFields !== 'object') {
                 this.user.customFields = {};
             }
 
-            this.user.customFields.is_salesrep = !!hasSalesrep;
-            this.__isSalesrepDetected = !!hasSalesrep;
+            this.user.customFields.is_sales_agent = !!hasSalesAgent;
+            this.__isSalesAgentDetected = !!hasSalesAgent;
         },
 
         saveUser(context) {
-            this.__syncSalesrepFlag();
+            this.__syncSalesAgentFlag();
             return this.$super('saveUser', context);
         },
     },

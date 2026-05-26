@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Command;
+namespace SalesAgent\Command;
 
 use Doctrine\DBAL\Exception;
-use Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager;
+use SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'salesrep:abandoned-cart:delete',
+    name: 'salesAgent:abandoned-cart:delete',
     description: 'Deletes "abandoned" carts without an existing reference.'
 )]
 final class DeleteAbandonedCartCommand extends Command

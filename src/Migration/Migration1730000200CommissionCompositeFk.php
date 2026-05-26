@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Migration;
+namespace SalesAgent\Migration;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Defaults;
@@ -19,7 +19,7 @@ class Migration1730000200CommissionCompositeFk extends MigrationStep
     {
         try {
             $c->executeStatement('
-                ALTER TABLE `salesrep_commission`
+                ALTER TABLE `sales_agent_commission`
                 ADD COLUMN `order_version_id` BINARY(16) NULL
             ');
         } catch (\Throwable $e) {
@@ -27,19 +27,19 @@ class Migration1730000200CommissionCompositeFk extends MigrationStep
         }
 
         $c->executeStatement('
-            UPDATE `salesrep_commission`
+            UPDATE `sales_agent_commission`
             SET `order_version_id` = UNHEX(:live)
             WHERE `order_version_id` IS NULL
         ', ['live' => Defaults::LIVE_VERSION]);
 
         $c->executeStatement('
-            ALTER TABLE `salesrep_commission`
+            ALTER TABLE `sales_agent_commission`
             MODIFY `order_version_id` BINARY(16) NOT NULL
         ');
 
         try {
             $c->executeStatement('
-                ALTER TABLE `salesrep_commission`
+                ALTER TABLE `sales_agent_commission`
                 DROP FOREIGN KEY `fk.sales_agent_commission.order_id`
             ');
         } catch (\Throwable $e) {
@@ -48,8 +48,8 @@ class Migration1730000200CommissionCompositeFk extends MigrationStep
 
         try {
             $c->executeStatement('
-                ALTER TABLE `salesrep_commission`
-                ADD CONSTRAINT `fk.salesrep_commission.order`
+                ALTER TABLE `sales_agent_commission`
+                ADD CONSTRAINT `fk.sales_agent_commission.order`
                 FOREIGN KEY (`order_id`, `order_version_id`)
                 REFERENCES `order` (`id`, `version_id`)
                 ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -60,7 +60,7 @@ class Migration1730000200CommissionCompositeFk extends MigrationStep
 
         try {
             $c->executeStatement('
-                ALTER TABLE `salesrep_commission`
+                ALTER TABLE `sales_agent_commission`
                 ADD UNIQUE KEY `ux_commission_order` (`order_id`)
             ');
         } catch (\Throwable $e) {

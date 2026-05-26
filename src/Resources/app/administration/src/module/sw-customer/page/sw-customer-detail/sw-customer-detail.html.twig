@@ -1,4 +1,66 @@
- {% block sw_customer_detail_content_tab_general %}
+{% block sw_customer_detail_actions_edit %}
+<span v-if="!editMode">
+    <sw-button
+        v-tooltip="{
+            message: $tc('sw-privileges.tooltip.warning'),
+            disabled: acl.can('customer.editor'),
+            showOnDisabledElements: true
+        }"
+        class="sw-customer-detail__open-edit-mode-action"
+        variant="primary"
+        :disabled="isLoading || !acl.can('customer.editor')"
+        @click.prevent="onActivateCustomerEditMode"
+    >
+        {{ $tc('sw-customer.detail.buttonEdit') }}
+    </sw-button>
+    <sw-button
+        v-show="customer && customer.guest"
+        variant="ghost"
+        :is-loading="isConvertingGuest"
+        :disabled="isConvertingGuest"
+        @click="openConvertModal"
+    >
+        {{ $tc('sales-agent.customerConvert.buttonLabel') }}
+    </sw-button>
+</span>
+{% endblock %}
+
+{% block sw_customer_detail %}
+    {% parent %}
+
+    <sw-modal
+        v-if="showDuplicateModal"
+        :title="$tc('sales-agent.customerConvert.duplicateModalTitle')"
+        @modal-close="showDuplicateModal = false"
+    >
+        <p>{{ $tc('sales-agent.customerConvert.errorDuplicate') }}</p>
+
+        <template #modal-footer>
+            <sw-button variant="primary" @click="showDuplicateModal = false">
+                {{ $tc('global.default.cancel') }}
+            </sw-button>
+        </template>
+    </sw-modal>
+
+    <sw-modal
+        v-if="showConvertModal"
+        :title="$tc('sales-agent.customerConvert.modalTitle')"
+        @modal-close="closeConvertModal"
+    >
+        <p>{{ $tc('sales-agent.customerConvert.modalMessage') }}</p>
+
+        <template #modal-footer>
+            <sw-button @click="closeConvertModal">
+                {{ $tc('global.default.cancel') }}
+            </sw-button>
+            <sw-button variant="primary" @click="onConfirmConvertGuest">
+                {{ $tc('sales-agent.customerConvert.modalConfirm') }}
+            </sw-button>
+        </template>
+    </sw-modal>
+{% endblock %}
+
+{% block sw_customer_detail_content_tab_general %}
     {% parent %}
     <sw-tabs-item :route="{ name: 'sw.customer.detail.custom', params: { id: $route.params.id } }">
         {{ $tc('abandoned-cart-admin.cardTitleCustomerCarts') }}

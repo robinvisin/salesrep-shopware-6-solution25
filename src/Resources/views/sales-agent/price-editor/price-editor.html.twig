@@ -1,0 +1,164 @@
+{% if page.extensions.saIsAgent is defined
+    and page.extensions.saIsAgent.is
+    and lineItem is defined
+    and lineItem.price
+    and lineItem.type == 'product' %}
+    {% set currentUnit = lineItem.payload.saFinalUnitPrice ?? lineItem.price.unitPrice %}
+    {% set origUnit = lineItem.payload.saOriginalUnitPrice ?? lineItem.price.unitPrice %}
+    {% set limit = page.extensions.saAgentCfg.discountLimit|default(0) %}
+
+    <div class="sa-price-editor mt-2"
+         data-sa-price-editor
+         data-line-item-id="{{ lineItem.id }}"
+         data-orig="{{ origUnit|number_format(2, '.', '') }}"
+         data-limit="{{ limit|number_format(2, '.', '') }}">
+        <label class="form-label" for="sa-price-{{ lineItem.id }}">Agent price (per unit)</label>
+
+        <div class="input-group">
+            <input id="sa-price-{{ lineItem.id }}"
+                   class="form-control js-sa-price-input"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   max="{{ origUnit|number_format(2, '.', '') }}"
+                   value="{{ currentUnit|number_format(2, '.', '') }}" />
+            <button type="button" class="btn btn-primary js-sa-apply">Apply discount</button>
+        </div>
+
+        <div class="mt-1 small text-muted">
+            Discount limit applies automatically (up to −{{ limit|number_format(1, '.', '') }}%).
+        </div>
+        <div class="mt-1 small text-danger d-none js-sa-error"></div>
+    </div>
+
+    <script>
+    (() => {
+      if (window.__saPriceEditorInlineLoaded) return;
+      window.__saPriceEditorInlineLoaded = true;
+
+      const toCents = (n) => Math.round((Number(n) + 1e-9) * 100);
+      const ceilToCents = (n) => Math.ceil((Number(n) + 1e-9) * 100);
+
+      const bind = (root) => {
+        const nodes = (root || document).querySelectorAll('[data-sa-price-editor]');
+        if (!nodes?.length) return;
+
+        nodes.forEach((el) => {
+          if (el.dataset.saBound === '1') return;
+          el.dataset.saBound = '1';
+
+          const input = el.querySelector('.js-sa-price-input');
+          const btn   = el.querySelector('.js-sa-apply');
+          const err   = el.querySelector('.js-sa-error');
+
+          const lineItemId = el.dataset.lineItemId;
+          const orig  = parseFloat(el.dataset.orig || '0');
+          const limit = parseFloat(el.dataset.limit || '0');
+
+          if (!input || !btn || !lineItemId || !orig) return;
+
+          const showError = (msg) => {
+            if (err) { err.textContent = msg; err.classList.remove('d-none'); }
+            input.classList.add('is-invalid');
+          };
+
+          const clearError = () => {
+            if (err) { err.textContent = ''; err.classList.add('d-none'); }
+            input.classList.remove('is-invalid');
+          };
+
+          btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            clearError();
+
+            const raw = (input.value || '').toString().trim().replace(',', '.');
+            const val = parseFloat(raw);
+
+            if (!Number.isFinite(val) || val < 0) {
+              showError('Enter a valid price (0 or more).');
+              return;
+            }
+
+            const valCents  = toCents(val);
+            const origCents = toCents(orig);
+
+            if (valCents > origCents) {
+              showError(`Price cannot exceed ${(origCents / 100).toFixed(2)}.`);
+              return;
+            }
+
+              if (limit > 0 && limit < 100) {
+                  const baseMin = orig * (1 - (limit / 100));
+                  const minAllowedCents = Math.max(0, ceilToCents(baseMin));
+
+                  if (valCents < minAllowedCents) {
+                      showError(`Too low. Minimum allowed is ${(minAllowedCents / 100).toFixed(2)}.`);
+                      return;
+                  }
+              }
+
+            try {
+              const headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+              };
+
+              const csrf = document.querySelector('meta[name="csrf-token"]');
+              if (csrf?.getAttribute('content')) {
+                headers['sw-csrf-token'] = csrf.getAttribute('content');
+              }
+
+              const body = new URLSearchParams({
+                lineItemId,
+                price: String(valCents / 100)
+              });
+
+              const resp = await fetch('/sales-agent/line-item/price', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers,
+                body
+              });
+
+              if (!resp.ok) {
+                let msg = 'Failed to apply discount.';
+                try {
+                  const j = await resp.json();
+                  if (j?.error) msg = j.error;
+                } catch (_e) {}
+                showError(msg);
+                return;
+              }
+
+              window.location.reload();
+            } catch (_err) {
+              showError('Network error applying discount.');
+            }
+          });
+        });
+      };
+
+      const init = () => bind(document);
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+      } else {
+        init();
+      }
+
+      document.addEventListener('ajaxReloaded', init);
+
+      const mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (!m.addedNodes) continue;
+          for (const n of m.addedNodes) {
+            if (n?.nodeType === 1) bind(n);
+          }
+        }
+      });
+
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    })();
+    </script>
+{% endif %}

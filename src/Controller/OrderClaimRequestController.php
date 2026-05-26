@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Controller;
+namespace SalesAgent\Controller;
 
-use Salesrep\Service\OrderClaimRequestService;
+use SalesAgent\Service\OrderClaimRequestService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Routing\ApiRouteScope;
 use Shopware\Core\PlatformRequest;
@@ -22,8 +22,9 @@ final class OrderClaimRequestController extends AbstractController
     }
 
     #[Route(
-        path: '/api/_action/salesrep/order-claim/request',
-        name: 'api.action.salesrep.order_claim.request',
+        path: '/api/_action/sales-agent/order-claim/request',
+        name: 'api.action.sales_agent.order_claim.request',
+        defaults: ['_acl' => ['order.editor']],
         methods: ['POST']
     )]
     public function requestClaim(Request $request, Context $context): JsonResponse
@@ -37,8 +38,9 @@ final class OrderClaimRequestController extends AbstractController
     }
 
     #[Route(
-        path: '/api/_action/salesrep/order-claim/approve',
-        name: 'api.action.salesrep.order_claim.approve',
+        path: '/api/_action/sales-agent/order-claim/approve',
+        name: 'api.action.sales_agent.order_claim.approve',
+        defaults: ['_acl' => ['order.editor']],
         methods: ['POST']
     )]
     public function approve(Request $request, Context $context): JsonResponse
@@ -52,8 +54,9 @@ final class OrderClaimRequestController extends AbstractController
     }
 
     #[Route(
-        path: '/api/_action/salesrep/order-claim/reject',
-        name: 'api.action.salesrep.order_claim.reject',
+        path: '/api/_action/sales-agent/order-claim/reject',
+        name: 'api.action.sales_agent.order_claim.reject',
+        defaults: ['_acl' => ['order.editor']],
         methods: ['POST']
     )]
     public function reject(Request $request, Context $context): JsonResponse
@@ -62,20 +65,6 @@ final class OrderClaimRequestController extends AbstractController
         $decisionNote = $this->readNullableString($request, 'decisionNote');
 
         $this->svc->reject($requestId, $decisionNote, $context);
-
-        return new JsonResponse(['status' => 'ok']);
-    }
-
-    #[Route(
-        path: '/api/_action/salesrep/order-claim/cancel',
-        name: 'api.action.salesrep.order_claim.cancel',
-        methods: ['POST']
-    )]
-    public function cancel(Request $request, Context $context): JsonResponse
-    {
-        $orderId = $this->readString($request, 'orderId');
-
-        $this->svc->cancel($orderId, $context);
 
         return new JsonResponse(['status' => 'ok']);
     }

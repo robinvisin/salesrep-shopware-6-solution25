@@ -1,0 +1,344 @@
+{% set tomorrow = "now"|date_modify("+1 day")|date("Y-m-d") %}
+{% set accessKey = context.salesChannel.accessKey %}
+{% set isAgent =
+    (context.imitatingUserId is defined and context.imitatingUserId)
+    or (context.customer and context.customer.customFields is defined
+        and (context.customer.customFields.sales_agent ?? false) in [true, 1, '1'])
+%}
+{% if isAgent %}
+<div
+    style="margin-bottom: 15px;"
+    class="card checkout-card"
+    id="sales-agent-cart-note"
+    data-endpoint="{{ path('store-api.sales-agent.cart.note') }}"
+    data-min-date="{{ tomorrow }}"
+    data-access-key="{{ accessKey }}"
+    data-context-token="{{ context.token }}"
+>
+    <div class="card-title">Sales Agent</div>
+
+    <div class="form-group">
+        <label class="form-label">Sales agent notes</label>
+        <textarea
+            id="sales-agent-notes"
+            class="form-control sa-focusable"
+            rows="3"
+            placeholder="Write notes about this order..."
+        ></textarea>
+    </div>
+
+    <div class="form-group mt-2">
+        <label for="sales-agent-do-not-ship" class="form-label">
+            Do not ship until after
+        </label>
+        <input
+            type="date"
+            id="sales-agent-do-not-ship"
+            class="form-control sa-focusable"
+            min="{{ tomorrow }}"
+            placeholder="Select date"
+        >
+    </div>
+
+</div>
+{% endif %}
+
+<script>
+(function() {
+    console.log('[SalesAgent] init cart note script');
+
+    const root = document.getElementById('sales-agent-cart-note');
+    if (!root) {
+        console.log('[SalesAgent] root container not found, aborting');
+        return;
+    }
+
+    const endpoint = root.dataset.endpoint;
+    const splitEndpoint = '{{ path('frontend.sales_agent.split') }}';
+    const minDate = root.dataset.minDate;
+    const accessKey = root.dataset.accessKey;
+    const contextToken = root.dataset.contextToken;
+
+    const notesEl = document.getElementById('sales-agent-notes');
+    const dateEl = document.getElementById('sales-agent-do-not-ship');
+    const saveBtn = document.getElementById('sales-agent-save-btn');
+    const successEl = document.getElementById('sales-agent-success');
+    const errorEl = document.getElementById('sales-agent-error');
+
+    console.log('[SalesAgent] endpoint:', endpoint);
+    console.log('[SalesAgent] minDate:', minDate);
+    console.log('[SalesAgent] accessKey:', accessKey ? 'present' : 'missing');
+    console.log('[SalesAgent] contextToken:', contextToken ? 'present' : 'missing');
+
+    if (dateEl && minDate) {
+        dateEl.min = minDate;
+    }
+
+    const FOCUS_CLASS = 'sa-input-active';
+
+    function addFocusHandlers() {
+        const focusables = root.querySelectorAll('.sa-focusable');
+        console.log('[SalesAgent] found focusables:', focusables.length);
+
+        focusables.forEach(function(el) {
+            el.addEventListener('focus', function() {
+                el.classList.add(FOCUS_CLASS);
+            });
+            el.addEventListener('blur', function() {
+                el.classList.remove(FOCUS_CLASS);
+            });
+            el.addEventListener('click', function() {
+                el.classList.add(FOCUS_CLASS);
+            });
+        });
+    }
+    addFocusHandlers();
+
+    function show(el) {
+        if (el) el.classList.remove('d-none');
+    }
+
+    function hide(el) {
+        if (el) el.classList.add('d-none');
+    }
+
+    function buildPayload() {
+        const notes = notesEl ? notesEl.value : '';
+        let date  = dateEl ? dateEl.value : null;
+
+        if (date && minDate && date < minDate) {
+            console.warn('[SalesAgent] chosen date < minDate, correcting', { chosen: date, minDate });
+            date = minDate;
+            if (dateEl) {
+                dateEl.value = minDate;
+            }
+        }
+
+        const payload = {
+            infoplus_salesAgentOrderNotes: notes,
+            infoplus_salesAgentDoNotShipUntil: date
+        };
+
+        console.log('[SalesAgent] buildPayload()', payload);
+        return payload;
+    }
+
+    function postSalesAgent(payload, done) {
+        console.log('[SalesAgent] posting payload to', endpoint, payload);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        if (accessKey) {
+            xhr.setRequestHeader('sw-access-key', accessKey);
+        }
+        if (contextToken) {
+            xhr.setRequestHeader('sw-context-token', contextToken);
+        }
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+
+            const ok = xhr.status >= 200 && xhr.status < 300;
+            console.log('[SalesAgent] XHR readyState=4, status=', xhr.status, 'ok=', ok);
+
+            if (ok) {
+                try {
+                    const res = JSON.parse(xhr.responseText || '{}');
+                    console.log('[SalesAgent] response JSON:', res);
+                    if (res && res.success) {
+                        hide(errorEl);
+                        show(successEl);
+                    } else {
+                        console.warn('[SalesAgent] success=false in response');
+                        hide(successEl);
+                        show(errorEl);
+                    }
+                } catch (e) {
+                    console.error('[SalesAgent] failed to parse JSON response', e, xhr.responseText);
+                    hide(successEl);
+                    show(errorEl);
+                }
+            } else {
+                console.error('[SalesAgent] request failed with status', xhr.status, xhr.responseText);
+                hide(successEl);
+                show(errorEl);
+            }
+
+            if (typeof done === 'function') {
+                done();
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error('[SalesAgent] XHR network error');
+            hide(successEl);
+            show(errorEl);
+            if (typeof done === 'function') {
+                done();
+            }
+        };
+
+        xhr.send(JSON.stringify(payload));
+    }
+
+    function findSplitInput(ids) {
+        for (const id of ids) {
+            const el = document.getElementById(id);
+            if (el) return el;
+        }
+        return null;
+    }
+
+    function buildSplitPayloadOrNull() {
+        const emailEl = findSplitInput(['saSplitEmail', 'sa-split-email']);
+        const percentEl = findSplitInput(['saSplitPercent', 'sa-split-percent']);
+
+        if (!emailEl && !percentEl) {
+            return null;
+        }
+
+        const email = String(emailEl?.value ?? '').trim();
+        const percentRaw = String(percentEl?.value ?? '').replace(/[^\d]/g, '');
+        const percent = percentRaw !== '' ? Math.max(0, Math.min(100, parseInt(percentRaw, 10) || 0)) : 0;
+
+        return { email, percent };
+    }
+
+    function postSplit(payload, done) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', splitEndpoint, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        if (accessKey) {
+            xhr.setRequestHeader('sw-access-key', accessKey);
+        }
+        if (contextToken) {
+            xhr.setRequestHeader('sw-context-token', contextToken);
+        }
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            const ok = xhr.status >= 200 && xhr.status < 300;
+            if (typeof done === 'function') {
+                done(ok, xhr.responseText);
+            }
+        };
+
+        xhr.onerror = function() {
+            if (typeof done === 'function') {
+                done(false, null);
+            }
+        };
+
+        xhr.send(JSON.stringify(payload));
+    }
+
+    function syncSalesAgentDataBeforeSubmit(done) {
+        const payload = buildPayload();
+        const splitPayload = buildSplitPayloadOrNull();
+
+        postSalesAgent(payload, () => {
+            if (splitPayload === null) {
+                done && done();
+                return;
+            }
+
+            postSplit(splitPayload, () => {
+                done && done();
+            });
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            console.log('[SalesAgent] save button clicked');
+            const payload = buildPayload();
+            postSalesAgent(payload);
+        });
+    } else {
+        console.log('[SalesAgent] save button not found (ok if you don\'t have one)');
+    }
+
+    const nativeFormSubmit = HTMLFormElement.prototype.submit;
+
+    function bindConfirmSubmitHandler() {
+        const form = document.getElementById('confirmOrderForm');
+        if (!form || form.dataset.saNoteBound === '1') {
+            return false;
+        }
+
+        form.dataset.saNoteBound = '1';
+        form.addEventListener('submit', function(event) {
+            if (form._salesAgentSynced) {
+                return;
+            }
+
+            event.preventDefault();
+            form._salesAgentSynced = true;
+
+            console.log('[SalesAgent] intercepted submit event on #confirmOrderForm');
+
+            syncSalesAgentDataBeforeSubmit(() => {
+                const delayMs = 200;
+                console.log('[SalesAgent] submit-event sync done, calling native submit in', delayMs, 'ms');
+                setTimeout(() => nativeFormSubmit.call(form), delayMs);
+            });
+        });
+
+        return true;
+    }
+
+    if (!bindConfirmSubmitHandler()) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindConfirmSubmitHandler, { once: true });
+        }
+
+        setTimeout(bindConfirmSubmitHandler, 250);
+        setTimeout(bindConfirmSubmitHandler, 1000);
+    }
+
+    HTMLFormElement.prototype.submit = function(...args) {
+        try {
+            if (this.id === 'confirmOrderForm') {
+                if (!this._salesAgentSynced) {
+                    this._salesAgentSynced = true;
+
+                    console.log('[SalesAgent] intercepted native form.submit() on #confirmOrderForm');
+
+                    syncSalesAgentDataBeforeSubmit(() => {
+                        const delayMs = 500;
+                        console.log('[SalesAgent] POST finished, submitting form natively in', delayMs, 'ms');
+                        setTimeout(() => {
+                            console.log('[SalesAgent] calling nativeFormSubmit() now');
+                            nativeFormSubmit.apply(this, args);
+                        }, delayMs);
+                    });
+
+                    return;
+                } else {
+                    console.log('[SalesAgent] native submit on #confirmOrderForm after sync, letting it pass');
+                }
+            }
+        } catch (e) {
+            console.error('[SalesAgent] error in overridden form.submit()', e);
+        }
+
+        return nativeFormSubmit.apply(this, args);
+    };
+
+    console.log('[SalesAgent] overridden HTMLFormElement.prototype.submit for confirmOrderForm');
+})();
+</script>
+
+<style>
+#sales-agent-cart-note .sa-focusable {
+    border: 1px solid #dde5ee !important;
+    box-shadow: none;
+}
+
+#sales-agent-cart-note .sa-input-active {
+    border: 1px solid #ab8355 !important;
+}
+</style>

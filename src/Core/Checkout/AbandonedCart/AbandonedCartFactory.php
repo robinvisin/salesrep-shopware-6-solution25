@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Checkout\AbandonedCart;
+namespace SalesAgent\Core\Checkout\AbandonedCart;
 
-use Salesrep\Exception\InvalidCartDataException;
-use Salesrep\Exception\MissingCartDataException;
+use SalesAgent\Exception\InvalidCartDataException;
+use SalesAgent\Exception\MissingCartDataException;
 use Shopware\Core\Checkout\Cart\Cart;
 
 class AbandonedCartFactory

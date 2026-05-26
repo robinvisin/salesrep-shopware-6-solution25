@@ -13,19 +13,21 @@
 {% endblock %}
 {% block sw_order_detail_header_label_manual_order %}
     <sw-label
-        v-if="order.customFields && (order.customFields.created_by_salesrep === true || order.customFields.created_by_salesrep === 1 || order.customFields.created_by_salesrep === '1')"
-        appearance="pill"
-        size="small"
-        class="sw-order-detail__manual-order-label"
+            v-if="order.customFields && (order.customFields.created_by_sales_agent === true || order.customFields.created_by_sales_agent === 1 || order.customFields.created_by_sales_agent === '1')"
+            appearance="pill"
+            size="small"
+            class="sw-order-detail__manual-order-label"
     >
-        {{ $tc('Created by Sales Agent') }}
+
+
+        {{ $tc('Created by Sales Agent') }}<span>: {{ createdBySalesAgentEmail }}</span>
     </sw-label>
 
     <sw-label
-        v-else-if="order.createdById"
-        appearance="pill"
-        size="small"
-        class="sw-order-detail__manual-order-label"
+            v-else-if="order.createdById"
+            appearance="pill"
+            size="small"
+            class="sw-order-detail__manual-order-label"
     >
         {{ $tc('sw-order.detail.labelManualOrder') }}
     </sw-label>

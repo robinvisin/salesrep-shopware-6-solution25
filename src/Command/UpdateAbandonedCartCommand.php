@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Command;
+namespace SalesAgent\Command;
 
 use Doctrine\DBAL\Exception;
-use Salesrep\Core\Checkout\AbandonedCart\AbandonedCartManager;
+use SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'salesrep:abandoned-cart:update',
+    name: 'salesAgent:abandoned-cart:update',
     description: 'Updates "abandoned" carts that have been modified since they were marked as abandoned.'
 )]
 final class UpdateAbandonedCartCommand extends Command

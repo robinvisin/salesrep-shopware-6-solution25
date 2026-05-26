@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Checkout\Customer\SalesChannel;
+namespace SalesAgent\Core\Checkout\Customer\SalesChannel;
 
 use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;

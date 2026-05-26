@@ -1,0 +1,155 @@
+<sw-page class="sales-agent-claim-request-list" page-title="Claim requests">
+
+    <template #smart-bar-actions>
+        <div class="sa-claim-smartbar">
+            <sw-single-select
+                class="sa-claim-status"
+                :options="statusOptions"
+                :value="statusFilter"
+                @update:value="onStatusChange"
+                size="small"
+            />
+
+            <sw-button variant="ghost" @click="load" :isLoading="isLoading">
+                Refresh
+            </sw-button>
+        </div>
+    </template>
+
+    <template #content>
+
+        {# ================= SALES AGENT VIEW ================= #}
+        <template v-if="isSalesAgent">
+<div class="sa-claim-cards">
+    <sw-card
+        v-for="item in items"
+        :key="item.id"
+        class="sa-claim-card"
+    >
+        <div class="sa-claim-row">
+            <span class="label">Order</span>
+            <code>{{ item.orderId }}</code>
+        </div>
+
+        <div class="sa-claim-row">
+            <span class="label">Status</span>
+            <sw-label appearance="pill" size="small">
+                {{ item.status }}
+            </sw-label>
+        </div>
+
+        <div class="sa-claim-row">
+            <span class="label">Requested at</span>
+            {{ formatDate(item.requestedAt) }}
+        </div>
+
+        <div class="sa-claim-row">
+            <span class="label">Reason</span>
+            {{ item.reason || '-' }}
+        </div>
+
+        <div class="sa-claim-row" v-if="item.decidedAt">
+            <span class="label">Decided at</span>
+            {{ formatDate(item.decidedAt) }}
+        </div>
+    </sw-card>
+</div>
+
+        </template>
+
+        {# ================= ADMIN VIEW ================= #}
+        <template v-else>
+            <div class="sa-claim-grid-wrap">
+                <sw-data-grid
+                    :dataSource="items"
+                    :columns="columns"
+                    :showSelection="false"
+                    :isLoading="isLoading"
+                >
+                    <template #column-requestedAt="{ item }">
+                        {{ formatDate(item.requestedAt) }}
+                    </template>
+
+                    <template #column-orderId="{ item }">
+                        <code>{{ item.orderId }}</code>
+                    </template>
+
+                    <template #column-requestedBy.email="{ item }">
+                        {{ item.requestedBy ? item.requestedBy.email : '' }}
+                    </template>
+
+                    <template #column-reason="{ item }">
+                        {{ item.reason || '-' }}
+                    </template>
+
+                    <template #column-status="{ item }">
+                        <sw-label appearance="pill" size="small">
+                            {{ item.status }}
+                        </sw-label>
+                    </template>
+
+                    <template #column-decidedAt="{ item }">
+                        {{ item.decidedAt ? formatDate(item.decidedAt) : '-' }}
+                    </template>
+
+                    <template #actions="{ item }">
+                        <div class="sa-claim-actions">
+                            <sw-button
+                                size="small"
+                                variant="primary"
+                                @click="openDecisionModal(item, 'approve')"
+                                :disabled="!canDecide(item)"
+                            >
+                                Approve
+                            </sw-button>
+
+                            <sw-button
+                                size="small"
+                                variant="danger"
+                                @click="openDecisionModal(item, 'reject')"
+                                :disabled="!canDecide(item)"
+                            >
+                                Reject
+                            </sw-button>
+                        </div>
+                    </template>
+                </sw-data-grid>
+            </div>
+        </template>
+
+        {# ================= DECISION MODAL ================= #}
+        <sw-modal
+            v-if="decisionModalOpen"
+            :title="decisionModalTitle"
+            variant="small"
+            @modal-close="closeDecisionModal"
+        >
+            <div class="sa-claim-modal-body" v-if="decisionItem">
+                <div><strong>Order:</strong> <code>{{ decisionItem.orderId }}</code></div>
+                <div><strong>Requested by:</strong> {{ decisionItem.requestedBy?.email }}</div>
+                <div><strong>Reason:</strong> {{ decisionItem.reason || '-' }}</div>
+
+                <sw-text-field
+                    v-model:value="decisionNoteDraft"
+                    placeholder="Decision note (optional)"
+                    size="small"
+                />
+            </div>
+
+            <template #modal-footer>
+                <sw-button variant="ghost" @click="closeDecisionModal">
+                    Cancel
+                </sw-button>
+
+                <sw-button
+                    :variant="decisionAction === 'approve' ? 'primary' : 'danger'"
+                    @click="confirmDecision"
+                    :isLoading="decisionSubmitting"
+                >
+                    {{ decisionAction === 'approve' ? 'Approve' : 'Reject' }}
+                </sw-button>
+            </template>
+        </sw-modal>
+
+    </template>
+</sw-page>

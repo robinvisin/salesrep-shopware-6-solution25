@@ -8,18 +8,26 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class ConfigService
 {
-    private SystemConfigService $configService;
-
-    public function __construct(SystemConfigService $configService)
-    {
-        $this->configService = $configService;
+    /**
+     * @param SystemConfigService $configService
+     */
+    public function __construct(
+        private readonly SystemConfigService $configService
+    ) {
     }
 
+    /**
+     * @return int
+     */
     public function getAbandonedCartTime(): int
     {
         return $this->configService->get('AbandonedCartAdmin.config.markAbandonedAfter') ?? 300;
     }
 
+    /**
+     * @param int $seconds
+     * @return void
+     */
     public function setAbandonedCartTime(int $seconds): void
     {
         $this->configService->set('AbandonedCartAdmin.config.markAbandonedAfter', $seconds);

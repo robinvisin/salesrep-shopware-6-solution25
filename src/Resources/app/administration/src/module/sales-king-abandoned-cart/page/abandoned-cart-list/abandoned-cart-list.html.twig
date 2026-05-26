@@ -1,0 +1,109 @@
+<template>
+    <sw-page class="abandoned-cart-list">
+        <template #search-bar>
+            <sw-search-bar
+                initial-search-type="sales_agent_abandoned_cart"
+                :initial-search="term"
+                :placeholder="$tc('Search abandoned carts...')"
+                @search="onSearch"
+            />
+        </template>
+
+        <template #content>
+            <sw-data-grid
+                :dataSource="carts"
+                :columns="columns"
+                :showSelection="false"
+            >
+                <template #column-fullName="{ item }">
+                    <a :href="`/admin#/sw/customer/detail/${item.customerId}/base`" class="link">
+                        {{ item.fullName }}
+                    </a>
+                </template>
+
+                <template #column-price="{ item }">
+                    {{ formatCurrency(item.price) }}
+                </template>
+
+                <template #column-lineItemCount="{ item }">
+                    <div
+                        class="line-items-button"
+                        style="cursor: pointer;"
+                        @click="openModal('lineItems', item.lineItems.map(i => ({
+                            label: i.label,
+                            quantity: i.quantity,
+                            unitPrice: i.price?.unitPrice || 0,
+                            totalPrice: i.price?.totalPrice || 0,
+                        })))"
+                    >
+                        {{ item.lineItems.length }} {{ $tc('abandoned-cart-admin.items') }}
+                    </div>
+                </template>
+
+                <template #column-actions="{ item }">
+                    <div style="cursor: pointer; color: #189eff;" size="small" @click="openModal('createOrder', item)">
+                        {{ $tc('abandoned-cart-admin.buttonCreateOrder') }}
+                    </div>
+                </template>
+
+                <template #actions="{ item }">
+                    <sw-context-menu-item
+                        @click="openModal('lineItems', item.lineItems.map(i => ({
+                            label: i.label,
+                            quantity: i.quantity,
+                            unitPrice: i.price?.unitPrice || 0,
+                            totalPrice: i.price?.totalPrice || 0,
+                        })))"
+                    >
+                        {{ $tc('abandoned-cart-admin.viewLineItems') }}
+                    </sw-context-menu-item>
+
+                    <sw-context-menu-item @click="openModal('sendReminder', item)">
+                        {{ $tc('Send Reminder') }}
+                    </sw-context-menu-item>
+
+                    <sw-context-menu-item variant="danger" @click="openModal('deleteCart', item)">
+                        {{ $tc('abandoned-cart-admin.delete') }}
+                    </sw-context-menu-item>
+                </template>
+            </sw-data-grid>
+
+            <sw-pagination
+                :total="total"
+                :limit="limit"
+                :page="page"
+                @limitChange="onPageChange"
+                @pageChange="onPageChange"
+            />
+        </template>
+    </sw-page>
+
+    <line-items-modal
+        v-if="currentModal === 'lineItems'"
+        :visible="true"
+        :items="modalPayload"
+        @close="closeModal"
+    />
+
+    <create-order-confirmation-modal
+        v-if="currentModal === 'createOrder'"
+        :visible="true"
+        @close="closeModal"
+        @confirm="confirmCreateOrder"
+    />
+
+    <send-reminder-modal
+        v-if="currentModal === 'sendReminder'"
+        :visible="true"
+        :cart="modalPayload"
+        @close="closeModal"
+        @confirm="confirmSendReminder"
+    />
+
+    <delete-confirmation-modal
+        v-if="currentModal === 'deleteCart'"
+        :visible="true"
+        @close="closeModal"
+        @confirm="confirmDeleteCart"
+    />
+</template>

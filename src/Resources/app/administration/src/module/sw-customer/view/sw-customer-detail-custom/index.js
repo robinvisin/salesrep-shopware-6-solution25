@@ -1,7 +1,7 @@
 import template from './sw-customer-detail-custom.html.twig';
-import '../../../salesrep-abandoned-cart/component';
+import '../../../sales-king-abandoned-cart/component';
 import FormatUtilsMixin from '../../../../mixin/formatting.mixin'
-import { Abandoned, ensureAbandonedStore } from '../../../../state/salesrep-abandoned.state';
+import { Abandoned, ensureAbandonedStore } from '../../../../state/sales-agent-abandoned.state';
 const { Component, Mixin } = Shopware;
 
 Component.register('sw-customer-detail-custom', {
@@ -32,7 +32,7 @@ Component.register('sw-customer-detail-custom', {
     },
 
     created() {
-        this.repository = this.repositoryFactory.create('salesrep_abandoned_cart');
+        this.repository = this.repositoryFactory.create('sales_agent_abandoned_cart');
         this.loadCarts();
     },
 

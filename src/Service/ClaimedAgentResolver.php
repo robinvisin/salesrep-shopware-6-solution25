@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Context;
@@ -14,7 +14,7 @@ use Shopware\Core\Framework\Uuid\Uuid;
 final class ClaimedAgentResolver
 {
     public function __construct(
-        private readonly EntityRepository $salesrepConfigRepo
+        private readonly EntityRepository $salesAgentConfigRepo
     ) {
     }
 
@@ -22,12 +22,12 @@ final class ClaimedAgentResolver
     {
         $cf = $order->getCustomFields() ?? [];
 
-        $claimedUserId = $cf['salesrep_claimed_user_id'] ?? null;
+        $claimedUserId = $cf['sales_agent_claimed_user_id'] ?? null;
         if (!\is_string($claimedUserId) || $claimedUserId === '' || !Uuid::isValid($claimedUserId)) {
             return null;
         }
 
-        $claimedAt = $cf['salesrep_claimed_at'] ?? null;
+        $claimedAt = $cf['sales_agent_claimed_at'] ?? null;
         if (!\is_string($claimedAt) || $claimedAt === '') {
             return null;
         }
@@ -36,7 +36,7 @@ final class ClaimedAgentResolver
             ->addFilter(new EqualsFilter('userId', $claimedUserId))
             ->setLimit(1);
 
-        $cfg = $this->salesrepConfigRepo->search($criteria, $context)->first();
+        $cfg = $this->salesAgentConfigRepo->search($criteria, $context)->first();
 
         return $cfg ? $claimedUserId : null;
     }

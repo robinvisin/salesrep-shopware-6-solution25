@@ -2,7 +2,7 @@ const { ApiService } = Shopware.Classes;
 
 export default class OrderClaimRequestApiService extends ApiService {
     constructor(httpClient, loginService) {
-        super(httpClient, loginService, 'salesrep-order-claim');
+        super(httpClient, loginService, 'sales-agent-order-claim');
     }
 
     approve(requestId, decisionNote = null) {
@@ -14,7 +14,7 @@ export default class OrderClaimRequestApiService extends ApiService {
         }
 
         return this.httpClient.post(
-            '/_action/salesrep/order-claim/approve',
+            '/_action/sales-agent/order-claim/approve',
             data,
             { headers }
         );
@@ -29,7 +29,7 @@ export default class OrderClaimRequestApiService extends ApiService {
         }
 
         return this.httpClient.post(
-            '/_action/salesrep/order-claim/reject',
+            '/_action/sales-agent/order-claim/reject',
             data,
             { headers }
         );
@@ -44,7 +44,7 @@ export default class OrderClaimRequestApiService extends ApiService {
         }
 
         return this.httpClient.post(
-            '/_action/salesrep/order-claim/request',
+            '/_action/sales-agent/order-claim/request',
             data,
             { headers }
         );

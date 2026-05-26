@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service\ScheduledTask;
+namespace SalesAgent\Service\ScheduledTask;
 
 use Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTask;
 
@@ -10,11 +10,11 @@ class DeleteAbandonedCartTask extends ScheduledTask
 {
     public static function getTaskName(): string
     {
-        return 'salesrep.abandoned_cart.delete';
+        return 'salesAgent.abandoned_cart.delete';
     }
 
     public static function getDefaultInterval(): int
     {
-        return 10;
+        return 86400;
     }
 }

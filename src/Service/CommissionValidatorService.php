@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Service;
+namespace SalesAgent\Service;
 
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -17,6 +17,7 @@ class CommissionValidatorService
 
     public function isOrderCommissionValid(OrderEntity $order, $agentId)
     {
+
     }
 
     public function setSessionValues(Request $request)

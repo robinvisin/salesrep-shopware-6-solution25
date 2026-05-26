@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Core\Content\AgentPayoutHistory;
+namespace SalesAgent\Core\Content\AgentPayoutHistory;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
 

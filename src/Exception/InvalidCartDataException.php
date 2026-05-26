@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Salesrep\Exception;
+namespace SalesAgent\Exception;
 
 use InvalidArgumentException;
 
