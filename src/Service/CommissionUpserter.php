@@ -58,25 +58,41 @@ final class CommissionUpserter
 
         $existing = $this->commissionRepo->search($criteria, $context);
 
+        $byOrderAndAgentId = [];
         $byOrderId = [];
         /** @var Entity $row */
         foreach ($existing->getEntities() as $row) {
             if ($row instanceof SalesAgentCommissionEntity) {
-                $byOrderId[$row->getOrderId()] = $row->getUniqueIdentifier();
+                $rowOrderId = $row->getOrderId();
+                $rowAgentId = (string) ($row->getAgentId() ?? '');
+
+                if ($rowAgentId !== '') {
+                    $byOrderAndAgentId[$this->commissionKey($rowOrderId, $rowAgentId)] = $row->getUniqueIdentifier();
+                }
+
+                $byOrderId[$rowOrderId] = $row->getUniqueIdentifier();
             }
         }
 
         foreach ($payloads as &$p) {
             $oid = (string)($p['_resolve_by_order_id'] ?? $p['orderId'] ?? '');
+            $agentId = (string)($p['agentId'] ?? '');
             unset($p['_resolve_by_order_id']);
 
             $p['orderVersionId'] = $p['orderVersionId'] ?? $live;
 
-            $p['id'] = $byOrderId[$oid] ?? ($p['id'] ?? Uuid::randomHex());
+            $p['id'] = ($agentId !== '' ? ($byOrderAndAgentId[$this->commissionKey($oid, $agentId)] ?? null) : null)
+                ?? ($agentId === '' ? ($byOrderId[$oid] ?? null) : null)
+                ?? ($p['id'] ?? Uuid::randomHex());
         }
         unset($p);
 
         $this->commissionRepo->upsert($payloads, $context);
+    }
+
+    private function commissionKey(string $orderId, string $agentId): string
+    {
+        return $orderId . ':' . $agentId;
     }
 
     public function zeroOutByOrderId(string $orderId, Context $context): void

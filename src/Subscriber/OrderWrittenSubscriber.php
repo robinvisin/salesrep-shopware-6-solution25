@@ -77,6 +77,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         }
 
         $payloads = [];
+        $keepAgentIdsByOrderId = [];
 
         foreach ($event->getWriteResults() as $wr) {
             $op = $wr->getOperation();
@@ -131,9 +132,17 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                 continue;
             }
 
+            $orderCfNow = $order->getCustomFields() ?? [];
+            $createdBySalesAgent = $orderCfNow[self::CF_CREATED_BY_SALES_AGENT] ?? false;
+            $createdBySalesAgent = $createdBySalesAgent === true || $createdBySalesAgent === 1 || $createdBySalesAgent === '1';
+            $createdBySalesAgentId = $orderCfNow[self::CF_CREATED_BY_SALES_AGENT_ID] ?? null;
+
             $agentId = (string)($wrPayload['createdById'] ?? '');
             if ($agentId === '') {
                 $agentId = (string)($this->getOrderCreatedByIdRaw($orderId) ?? '');
+            }
+            if ($createdBySalesAgent && \is_string($createdBySalesAgentId) && Uuid::isValid($createdBySalesAgentId)) {
+                $agentId = $createdBySalesAgentId;
             }
             if ($agentId === '') {
                 $agentId = (string)($this->agentResolver->resolve($ctx) ?? '');
@@ -160,7 +169,6 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                     (($agentUserCf['sales_agent'] ?? false) === true || (string)($agentUserCf['sales_agent'] ?? '') === '1');
             }
 
-            $orderCfNow = $order->getCustomFields() ?? [];
             $flagExists = \array_key_exists(self::CF_CREATED_BY_SALES_AGENT, $orderCfNow);
 
             if ($op === EntityWriteResult::OPERATION_INSERT || !$flagExists) {
@@ -240,7 +248,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                     $ctx
                 )->first();
 
-                if ($splitUser && $this->isSalesAgentUserId((string) $splitUser->getId(), $ctx)) {
+                if ($splitUser && $splitUser->getId() !== $agentId && $this->isSalesAgentUserId((string) $splitUser->getId(), $ctx)) {
                     $splitAgentId = $splitUser->getId();
                 } else {
                     $postedSplitEmail = '';
@@ -281,14 +289,33 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                 'commissionAmount'          => $mainCommission,
                 'excludedByAgentEmail'      => (bool)$excludedByAgent,
             ];
+            $keepAgentIdsByOrderId[$orderId][$agentId] = true;
+
+            if ($splitAgentId !== null && $splitAmount > 0.0) {
+                $payloads[] = [
+                    '_resolve_by_order_id'      => $orderId,
+                    'orderId'                   => $orderId,
+                    'orderVersionId'            => Defaults::LIVE_VERSION,
+                    'agentId'                   => $splitAgentId,
+                    'effectiveDiscountPercent'  => $effectiveDiscountPercent,
+                    'commissionPercentApplied'  => $commissionPercentApplied,
+                    'commissionAmount'          => $splitAmount,
+                    'excludedByAgentEmail'      => false,
+                ];
+                $keepAgentIdsByOrderId[$orderId][$splitAgentId] = true;
+            }
         }
 
         if ($payloads === []) {
             return;
         }
 
-        $ctx->scope(Context::SYSTEM_SCOPE, function (Context $system) use ($payloads): void {
+        $ctx->scope(Context::SYSTEM_SCOPE, function (Context $system) use ($payloads, $keepAgentIdsByOrderId): void {
             $this->upserter->upsertByOrderId($payloads, $system);
+
+            foreach ($keepAgentIdsByOrderId as $orderId => $agentIds) {
+                $this->upserter->zeroOutByOrderIdExcludingAgents($orderId, array_keys($agentIds), $system);
+            }
         });
     }
 
@@ -353,7 +380,16 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             ->addFilter(new EqualsFilter('userId', $userId))
             ->setLimit(1);
 
-        return $this->salesAgentConfigRepository->search($criteria, $context)->count() > 0;
+        if ($this->salesAgentConfigRepository->search($criteria, $context)->count() > 0) {
+            return true;
+        }
+
+        /** @var UserEntity|null $user */
+        $user = $this->userRepository->search((new Criteria([$userId]))->setLimit(1), $context)->first();
+        $cf = $user?->getCustomFields() ?? [];
+
+        return ($cf['sales_agent'] ?? $cf['is_sales_agent'] ?? false) === true
+            || (string) ($cf['sales_agent'] ?? $cf['is_sales_agent'] ?? '') === '1';
     }
 
     private function isGlobalAdminUserId(string $userId, Context $context): bool

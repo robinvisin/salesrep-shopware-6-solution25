@@ -446,17 +446,24 @@ export default class SalesKingAgentService {
     async fetchOrdersForGrid(userId, range) {
         const stored = await this.fetchStoredCommissions(userId, range);
         const split  = await this.fetchSplitCommissionsFromOrders(userId, range);
-        const combined = [...stored, ...split];
+        const combined = this.mergeStoredAndLegacySplitCommissions(stored, split);
         return this.hydrateCommissionsWithOrders(combined);
     }
 
     async fetchCombinedCommissions(userId, { start, end }) {
         const stored = await this.fetchStoredCommissions(userId, { start, end });
         const split  = await this.fetchSplitCommissionsFromOrders(userId, { start, end });
-        const all    = [...stored, ...split];
+        const all = this.mergeStoredAndLegacySplitCommissions(stored, split);
 
         const hydrated = await this.hydrateCommissionsWithOrders(all);
         hydrated.sort((a, b) => new Date(b.orderDateTime || 0) - new Date(a.orderDateTime || 0));
         return hydrated;
+    }
+
+    mergeStoredAndLegacySplitCommissions(stored, split) {
+        const storedOrderIds = new Set((stored || []).map(row => row.orderId).filter(Boolean));
+        const legacyOnlySplitRows = (split || []).filter(row => !storedOrderIds.has(row.orderId));
+
+        return [...(stored || []), ...legacyOnlySplitRows];
     }
 }

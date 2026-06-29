@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
+
 namespace SalesAgent\Subscriber;
 
 use Doctrine\DBAL\Connection;
 use Psr\Log\LoggerInterface;
 use SalesAgent\Service\CommissionUpserter;
-use Shopware\Commercial\ReturnManagement\Entity\OrderReturnLineItem\OrderReturnLineItemDefinition;
-use Shopware\Commercial\ReturnManagement\Entity\OrderReturnLineItem\OrderReturnLineItemEntity;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
@@ -22,10 +21,13 @@ final class CommercialReturnSubscriber implements EventSubscriberInterface
 {
     private const CTX_STATE_SKIP_SPLIT_RECOMPUTE = 'sales_agent_skip_split_recompute';
 
+    private const ORDER_RETURN_LINE_ITEM_DEFINITION =
+        'Shopware\\Commercial\\ReturnManagement\\Entity\\OrderReturnLineItem\\OrderReturnLineItemDefinition';
+
     public function __construct(
         private readonly EntityRepository   $orderRepository,
         private readonly EntityRepository   $orderReturnLineItemRepository,
-        private readonly CommissionUpserter $upserter, 
+        private readonly CommissionUpserter $upserter,
         private readonly Connection         $connection,
         private readonly LoggerInterface    $logger
     ) {
@@ -33,8 +35,14 @@ final class CommercialReturnSubscriber implements EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
+        if (!class_exists(self::ORDER_RETURN_LINE_ITEM_DEFINITION)) {
+            return [];
+        }
+
+        $definitionClass = self::ORDER_RETURN_LINE_ITEM_DEFINITION;
+
         return [
-            OrderReturnLineItemDefinition::ENTITY_NAME . '.written' => 'onReturnLineItemWritten',
+            $definitionClass::ENTITY_NAME . '.written' => 'onReturnLineItemWritten',
         ];
     }
 

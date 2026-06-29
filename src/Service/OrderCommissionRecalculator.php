@@ -270,7 +270,27 @@ final class OrderCommissionRecalculator
         )->first();
 
         $splitId = $splitUser?->getId();
-        return (\is_string($splitId) && Uuid::isValid($splitId)) ? $splitId : null;
+        if (!\is_string($splitId) || !Uuid::isValid($splitId)) {
+            return null;
+        }
+
+        return $this->isSalesAgentUser($splitId, $splitUser, $context) ? $splitId : null;
+    }
+
+    private function isSalesAgentUser(string $userId, ?UserEntity $user, Context $context): bool
+    {
+        $cfg = $this->salesAgentConfigRepo
+            ->search((new Criteria())->addFilter(new EqualsFilter('userId', $userId))->setLimit(1), $context)
+            ->first();
+
+        if ($cfg !== null) {
+            return true;
+        }
+
+        $cf = $user?->getCustomFields() ?? [];
+
+        return ($cf['sales_agent'] ?? $cf['is_sales_agent'] ?? false) === true
+            || (string) ($cf['sales_agent'] ?? $cf['is_sales_agent'] ?? '') === '1';
     }
 
     private function writeSplitMeta(

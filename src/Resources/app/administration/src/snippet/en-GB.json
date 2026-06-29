@@ -145,6 +145,15 @@
       },
       "system_config": {
         "label": "System configuration"
+      },
+      "notification":{
+        "label":"Notification"
+      },
+      "sales_agent_order_claim_request":{
+        "label":"Claim request"
+      },
+      "store_credit_history":{
+        "label":"Store Cerdit"
       }
     },
     "additional_permissions": {

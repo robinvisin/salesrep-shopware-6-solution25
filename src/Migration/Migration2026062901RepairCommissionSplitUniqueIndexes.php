@@ -7,11 +7,11 @@ namespace SalesAgent\Migration;
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
 
-class Migration20251110AddAgentToCommissionUnique extends MigrationStep
+class Migration2026062901RepairCommissionSplitUniqueIndexes extends MigrationStep
 {
     public function getCreationTimestamp(): int
     {
-        return 2025111001;
+        return 2026062901;
     }
 
     public function update(Connection $connection): void
@@ -39,6 +39,6 @@ class Migration20251110AddAgentToCommissionUnique extends MigrationStep
 
     public function updateDestructive(Connection $connection): void
     {
-        // nothing
+        // no-op
     }
 }
