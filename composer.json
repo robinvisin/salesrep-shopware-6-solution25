@@ -1,5 +1,5 @@
 {
-    "name": "sales-agent/sales-agent-shopware-6-solution25",
+    "name": "solution25/sales-agent-shopware-6-solution25",
     "description": "Sales Agent Plugin for Shopware 6 ",
     "type": "shopware-platform-plugin",
     "version": "1.0.2",
