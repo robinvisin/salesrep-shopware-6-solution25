@@ -1,5 +1,5 @@
 <template>
-    <sw-card :title="$tc('abandoned-cart-admin.cardTitleCustomerCarts')">
+    <mt-card :title="$tc('abandoned-cart-admin.cardTitleCustomerCarts')">
         <template #default>
             <div
                 v-if="carts.length === 0"
@@ -44,13 +44,13 @@
                     </template>
 
                     <template #column-actions="{ item }">
-                        <sw-button
+                        <mt-button
                             variant="primary"
                             size="small"
                             @click="openModal('createOrder', item)"
                         >
                             {{ $tc('abandoned-cart-admin.buttonCreateOrder') }}
-                        </sw-button>
+                        </mt-button>
                     </template>
 
                     <template #actions="{ item }">
@@ -81,7 +81,7 @@
                 />
             </div>
         </template>
-    </sw-card>
+    </mt-card>
     <line-items-modal
         v-if="currentModal === 'lineItems'"
         :visible="true"

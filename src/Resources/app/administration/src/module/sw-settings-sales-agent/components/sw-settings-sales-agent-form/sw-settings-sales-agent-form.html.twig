@@ -1,26 +1,26 @@
 <div class="sw-settings-sales-agent-form">
     <div style="margin-top: 40px;">
-        <sw-card
+        <mt-card
             :title="$tc('sales-agent-settings.fields.excludedEmails.label')"
             :isloading="isLoading"
         >
-            <sw-text-field
+            <mt-text-field
                 :label="$tc('sales-agent-settings.fields.excludedEmails.label')"
                 :help-text="$tc('sales-agent-settings.fields.excludedEmails.help')"
                 :placeholder="$tc('sales-agent-settings.fields.excludedEmails.help')"
-                v-model:value="global.excludedEmailsCsv"
+                v-model="global.excludedEmailsCsv"
             />
             <template #footer>
-                <sw-button
-                    variant="ghost"
+                <mt-button
+                    variant="primary" ghost
                     :isloading="isLoading"
                     @click="saveGlobal"
                 >
                     {{ $tc('sales-agent-settings.general.save') }}
-                </sw-button>
+                </mt-button>
             </template>
-        </sw-card>
-        <sw-card :title="$tc('sales-agent-settings.general.user')">
+        </mt-card>
+        <mt-card :title="$tc('sales-agent-settings.general.user')">
             <sw-entity-single-select
                 :key="userCriteriaKey"
                 entity="user"
@@ -33,13 +33,13 @@
                 show-clearable-button
                 @update:value="onUserChanged"
             />
-        </sw-card>
-        <sw-card
+        </mt-card>
+        <mt-card
             :title="$tc('sales-agent-settings.general.configuration')"
             :isLoading="isLoading"
         >
             <div class="grid grid-cols-1 gap-20">
-                <sw-number-field
+                <mt-number-field
                     :label="$tc('sales-agent-settings.fields.commissionPercentage.label')"
                     :help-text="$tc('sales-agent-settings.fields.commissionPercentage.help')"
                     placeholder="e.g. 5"
@@ -47,18 +47,18 @@
                     :max="100"
                     :step="0.01"
                     numberType="float"
-                    v-model:value="form.commissionPercentage"
+                    v-model="form.commissionPercentage"
                 />
-                <sw-number-field
+                <mt-number-field
                     :label="$tc('sales-agent-settings.fields.discountLimit.label')"
                     placeholder="e.g. 15"
                     :min="0"
                     :max="100"
                     :step="0.01"
                     numberType="float"
-                    v-model:value="form.discountLimit"
+                    v-model="form.discountLimit"
                 />
             </div>
-        </sw-card>
+        </mt-card>
     </div>
 </div>

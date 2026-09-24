@@ -1,7 +1,7 @@
 {% block sw_customer_address_form_zipcode_city_container %}
 {% block sw_customer_address_form_zipcode_field %}
-<sw-text-field
-    v-model:value="address.zipcode"
+<mt-text-field
+    v-model="address.zipcode"
     name="sw-field--address-zipcode"
     :label="$tc('sw-customer.addressForm.labelZipcode')"
     :placeholder="$tc('sw-customer.addressForm.placeholderZipcode')"
@@ -15,8 +15,8 @@
 {% endblock %}
 
 {% block sw_customer_address_form_city_field %}
-<sw-text-field
-    v-model:value="address.city"
+<mt-text-field
+    v-model="address.city"
     name="sw-field--address-city"
     :label="$tc('sw-customer.addressForm.labelCity')"
     :placeholder="$tc('sw-customer.addressForm.placeholderCity')"

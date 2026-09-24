@@ -11,13 +11,13 @@
                 @update:value="onStatusChange"
                 size="small"
             />
-            <sw-button
-                variant="ghost"
+            <mt-button
+                variant="primary" ghost
                 @click="load"
                 :isLoading="isLoading"
             >
                 Refresh
-            </sw-button>
+            </mt-button>
         </div>
     </template>
 
@@ -25,7 +25,7 @@
         {# ================= SALES AGENT VIEW ================= #}
         <template v-if="isSalesAgent">
             <div class="sa-claim-cards">
-                <sw-card
+                <mt-card
                     v-for="item in items"
                     :key="item.id"
                     class="sa-claim-card"
@@ -58,7 +58,7 @@
                         <span class="label">Decided at</span>
                         {{ formatDate(item.decidedAt) }}
                     </div>
-                </sw-card>
+                </mt-card>
             </div>
         </template>
         {# ================= ADMIN VIEW ================= #}
@@ -101,22 +101,22 @@
 
                     <template #actions="{ item }">
                         <div class="sa-claim-actions">
-                            <sw-button
+                            <mt-button
                                 size="small"
                                 variant="primary"
                                 @click="openDecisionModal(item, 'approve')"
                                 :disabled="!canDecide(item)"
                             >
                                 Approve
-                            </sw-button>
-                            <sw-button
+                            </mt-button>
+                            <mt-button
                                 size="small"
-                                variant="danger"
+                                variant="critical"
                                 @click="openDecisionModal(item, 'reject')"
                                 :disabled="!canDecide(item)"
                             >
                                 Reject
-                            </sw-button>
+                            </mt-button>
                         </div>
                     </template>
                 </sw-data-grid>
@@ -145,26 +145,26 @@
                     <strong>Reason:</strong>
                     {{ decisionItem.reason || '-' }}
                 </div>
-                <sw-text-field
-                    v-model:value="decisionNoteDraft"
+                <mt-text-field
+                    v-model="decisionNoteDraft"
                     placeholder="Decision note (optional)"
                     size="small"
                 />
             </div>
             <template #modal-footer>
-                <sw-button
-                    variant="ghost"
+                <mt-button
+                    variant="primary" ghost
                     @click="closeDecisionModal"
                 >
                     Cancel
-                </sw-button>
-                <sw-button
+                </mt-button>
+                <mt-button
                     :variant="decisionAction === 'approve' ? 'primary' : 'danger'"
                     @click="confirmDecision"
                     :isLoading="decisionSubmitting"
                 >
                     {{ decisionAction === 'approve' ? 'Approve' : 'Reject' }}
-                </sw-button>
+                </mt-button>
             </template>
         </sw-modal>
     </template>

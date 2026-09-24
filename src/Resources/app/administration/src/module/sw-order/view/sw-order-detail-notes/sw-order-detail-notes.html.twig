@@ -1,29 +1,29 @@
 <template>
-    <sw-card
+    <mt-card
         title="Internal Notes"
         class="sw-order-detail-notes"
         :is-loading="isLoading"
     >
-        <sw-textarea-field
-            v-model:value="note"
+        <mt-textarea
+            v-model="note"
             label="Notes"
             placeholder="Write notes about this order..."
             :rows="6"
         />
-        <sw-datepicker
+        <mt-datepicker
             v-model:value="doNotShipUntil"
             dateType="date"
             label="Do not ship until after"
             placeholder="Select date"
             class="mt-3"
         />
-        <sw-button
+        <mt-button
             variant="primary"
             class="mt-3"
             :loading="isSaving"
             @click="saveNotes"
         >
             Save
-        </sw-button>
-    </sw-card>
+        </mt-button>
+    </mt-card>
 </template>

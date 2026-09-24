@@ -13,7 +13,7 @@
                 class="sw-icon sw-icon--default"
                 style="display:flex;align-items:center;color:var(--color-darkgray-200);"
             >
-                <sw-icon name="regular-long-arrow-left"/>
+                <mt-icon name="regular-long-arrow-left"/>
             </router-link>
             <h2 style="margin:0;">
                 {{ $tc('sales-king.all-time-earnings.title') || 'All-time earnings' }}
@@ -50,13 +50,13 @@
                     </template>
 
                     <template #column-export="{ item }">
-                        <sw-button
+                        <mt-button
                             size="small"
-                            variant="ghost"
+                            variant="primary" ghost
                             @click="downloadAgentCsv(item)"
                         >
                             Download CSV
-                        </sw-button>
+                        </mt-button>
                     </template>
                 </sw-data-grid>
             </template>

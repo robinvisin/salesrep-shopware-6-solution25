@@ -1,6 +1,6 @@
 {% block sw_customer_detail_actions_edit %}
 <span v-if="!editMode">
-    <sw-button
+    <mt-button
         v-tooltip="{
             message: $tc('sw-privileges.tooltip.warning'),
             disabled: acl.can('customer.editor'),
@@ -12,16 +12,16 @@
         @click.prevent="onActivateCustomerEditMode"
     >
         {{ $tc('sw-customer.detail.buttonEdit') }}
-    </sw-button>
-    <sw-button
+    </mt-button>
+    <mt-button
         v-show="customer && customer.guest"
-        variant="ghost"
+        variant="primary" ghost
         :is-loading="isConvertingGuest"
         :disabled="isConvertingGuest"
         @click="openConvertModal"
     >
         {{ $tc('sales-agent.customerConvert.buttonLabel') }}
-    </sw-button>
+    </mt-button>
 </span>
 {% endblock %}
 
@@ -37,12 +37,12 @@
         {{ $tc('sales-agent.customerConvert.errorDuplicate') }}
     </p>
     <template #modal-footer>
-        <sw-button
+        <mt-button
             variant="primary"
             @click="showDuplicateModal = false"
         >
             {{ $tc('global.default.cancel') }}
-        </sw-button>
+        </mt-button>
     </template>
 </sw-modal>
 
@@ -55,15 +55,15 @@
         {{ $tc('sales-agent.customerConvert.modalMessage') }}
     </p>
     <template #modal-footer>
-        <sw-button @click="closeConvertModal">
+        <mt-button @click="closeConvertModal">
             {{ $tc('global.default.cancel') }}
-        </sw-button>
-        <sw-button
+        </mt-button>
+        <mt-button
             variant="primary"
             @click="onConfirmConvertGuest"
         >
             {{ $tc('sales-agent.customerConvert.modalConfirm') }}
-        </sw-button>
+        </mt-button>
     </template>
 </sw-modal>
 {% endblock %}

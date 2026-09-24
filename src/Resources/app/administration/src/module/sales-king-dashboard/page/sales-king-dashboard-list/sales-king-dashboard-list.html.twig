@@ -78,7 +78,7 @@
                 />
                 <sales-king-commission-chart title="Commission Trend (This Month)"/>
             </div>
-            <sw-card
+            <mt-card
                 class="sales-king-dashboard__payout-history"
                 :title="$tc('Payout history')"
                 style="margin-top: 20px;"
@@ -91,14 +91,14 @@
                     :isLoading="payoutHistoryLoading"
                 >
                     <template #toolbar>
-                        <sw-button
-                            variant="ghost"
+                        <mt-button
+                            variant="primary" ghost
                             size="small"
                             :disabled="payoutHistoryLoading || payoutHistory.length === 0"
                             @click="downloadPayoutHistoryCsv"
                         >
                             Download CSV
-                        </sw-button>
+                        </mt-button>
                     </template>
 
                     <template #column-paid="{ item }">
@@ -130,7 +130,7 @@
                 >
                     No payouts yet.
                 </div>
-            </sw-card>
+            </mt-card>
             <sales-king-customers-grid
                 :customers="customers"
                 :columns="customerColumns"

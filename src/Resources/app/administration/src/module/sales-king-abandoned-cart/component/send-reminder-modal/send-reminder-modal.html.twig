@@ -11,12 +11,12 @@
 </strong>
             {{ cart.email || '—' }}
         </p>
-        <sw-switch-field
+        <mt-switch
             v-model:value="includeItems"
             :label="$tc('abandoned-cart-admin.reminderIncludeItems')"
         />
-        <sw-textarea-field
-            v-model:value="note"
+        <mt-textarea
+            v-model="note"
             :label="$tc('abandoned-cart-admin.reminderNoteLabel')"
             :placeholder="$tc('abandoned-cart-admin.reminderNotePlaceholder')"
             :rows="5"
@@ -24,15 +24,15 @@
         />
     </div>
     <template #modal-footer>
-        <sw-button @click="onClose">
+        <mt-button @click="onClose">
             {{ $tc('Cancel') }}
-        </sw-button>
-        <sw-button
+        </mt-button>
+        <mt-button
             variant="primary"
             :isLoading="isSending"
             @click="onConfirm"
         >
             {{ $tc('abandoned-cart-admin.reminderSendButton') }}
-        </sw-button>
+        </mt-button>
     </template>
 </sw-modal>

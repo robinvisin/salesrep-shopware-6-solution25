@@ -1,4 +1,4 @@
-<sw-card :title="title">
+<mt-card :title="title">
     <template #title>
         <div
             class="kpi-title-wrapper"
@@ -37,14 +37,14 @@
             </div>
         </div>
         <div style="margin-top:20px; text-align:right;">
-            <sw-button
+            <mt-button
                 size="small"
-                variant="ghost"
+                variant="primary" ghost
                 :disabled="isLoading"
                 @click="$emit('download')"
             >
                 {{ isLoading ? 'Loading...' : 'Download all data' }}
-            </sw-button>
+            </mt-button>
         </div>
     </div>
-</sw-card>
+</mt-card>

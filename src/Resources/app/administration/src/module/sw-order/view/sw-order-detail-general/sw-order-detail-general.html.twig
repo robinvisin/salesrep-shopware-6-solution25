@@ -1,5 +1,5 @@
 {% block sw_order_detail_general %}
-<sw-card
+<mt-card
     v-if="isSalesAgentUser && !isOrderCancelled"
     title="Commission claim request"
     :isLoading="claimReqLoading"
@@ -44,32 +44,32 @@
     </template>
 
     <template v-else>
-        <sw-textarea-field
-            v-model:value="claimReqReasonInput"
+        <mt-textarea
+            v-model="claimReqReasonInput"
             label="Reason (optional)"
             placeholder="Explain why this commission should be attributed to you…"
         />
         <div
             style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"
         >
-            <sw-button
-                variant="ghost"
+            <mt-button
+                variant="primary" ghost
                 @click="loadClaimRequestStatus"
                 :isLoading="claimReqLoading"
             >
                 Refresh status
-            </sw-button>
-            <sw-button
+            </mt-button>
+            <mt-button
                 variant="primary"
                 @click="submitClaimRequest"
                 :isLoading="claimReqSubmitting"
                 :disabled="!orderId"
             >
                 Request claim
-            </sw-button>
+            </mt-button>
         </div>
     </template>
-</sw-card>
+</mt-card>
 
 {% parent() %}
 {% endblock %}
