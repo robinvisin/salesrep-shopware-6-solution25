@@ -14,14 +14,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(defaults: [PlatformRequest::ATTRIBUTE_ROUTE_SCOPE => [ApiRouteScope::ID]])]
+#[\Symfony\Component\Routing\Attribute\Route(defaults: [PlatformRequest::ATTRIBUTE_ROUTE_SCOPE => [ApiRouteScope::ID]])]
 final class SalesAgentValidateSalesAgentEmailActionController extends AbstractController
 {
     public function __construct(
         private readonly EntityRepository $userRepository
     ) {}
 
-    #[Route(
+    #[\Symfony\Component\Routing\Attribute\Route(
         path: '/api/_action/sales-agent/validate-email',
         name: 'api.action.sales_agent.validate_email',
         methods: ['POST'],

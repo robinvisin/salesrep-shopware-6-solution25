@@ -15,17 +15,16 @@
             :isLoading="loading"
             rowKey="id"
         >
-        <template #column-fullName="{ item }">
-            <a
-                v-if="item.orderCustomer?.customer?.id"
-                :href="`/admin#/sw/customer/detail/${item.orderCustomer.customer.id}/base?edit=false`"
-            >
+            <template #column-fullName="{ item }">
+                <a
+                    v-if="item.orderCustomer?.customer?.id"
+                    :href="`/admin#/sw/customer/detail/${item.orderCustomer.customer.id}/base?edit=false`"
+                >
                 {{ item.fullName }}
             </a>
-            <span v-else>{{ item.fullName }}</span>
-        </template>
+                <span v-else>{{ item.fullName }}</span>
+            </template>
         </sw-data-grid>
-
         <sales-king-pagination
             :totalItems="count"
             :currentPage="page"
@@ -36,7 +35,9 @@
 
     <template v-else>
         <div class="sw-empty-state">
-            <p>{{ $tc('No linked customers found.') }}</p>
+            <p>
+                {{ $tc('No linked customers found.') }}
+            </p>
         </div>
     </template>
 </sw-card>

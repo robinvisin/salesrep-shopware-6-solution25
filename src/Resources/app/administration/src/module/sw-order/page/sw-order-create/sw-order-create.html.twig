@@ -1,15 +1,17 @@
 {% block sw_order_create_remind_payment_modal_content %}
-	<p>{{ $tc('Do you want to remind the customer to pay this order?') }}</p>
+<p>
+    {{ $tc('Do you want to remind the customer to pay this order?') }}
+</p>
 {% endblock %}
- {% block sw_order_create_content_tabs_general %}
-    {% parent %}
-    <sw-tabs-item
-        :route="{ name: 'sw.order.create.notes' }"
-    >
-		Notes & Signature
-    </sw-tabs-item>
-    <sw-tabs-item :route="{ name: 'sw.order.create.splitCommission' }">
-        Split commission
-    </sw-tabs-item>
 
+{% block sw_order_create_content_tabs_general %}
+{% parent() %}
+
+<sw-tabs-item :route="{ name: 'sw.order.create.notes' }">
+    Notes & Signature
+</sw-tabs-item>
+
+<sw-tabs-item :route="{ name: 'sw.order.create.splitCommission' }">
+    Split commission
+</sw-tabs-item>
 {% endblock %}

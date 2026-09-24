@@ -5,13 +5,20 @@
     {# class="custom-small-modal" #}
     {# size="small" #}
 >
-    <p>{{ $tc('abandoned-cart-admin.messageConfirmCreateOrder') }}</p>
-
+    <p>
+        {{ $tc('abandoned-cart-admin.messageConfirmCreateOrder') }}
+    </p>
     <template #modal-footer>
-        <sw-button @click="close" variant="ghost">
+        <sw-button
+            @click="close"
+            variant="ghost"
+        >
             {{ $tc('abandoned-cart-admin.buttonCancel') }}
         </sw-button>
-        <sw-button @click="confirm" variant="primary">
+        <sw-button
+            @click="confirm"
+            variant="primary"
+        >
             {{ $tc('abandoned-cart-admin.buttonConfirm') }}
         </sw-button>
     </template>

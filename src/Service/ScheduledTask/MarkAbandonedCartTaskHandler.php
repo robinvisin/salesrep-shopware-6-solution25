@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SalesAgent\Service\ScheduledTask;
 
+use Psr\Log\LoggerInterface;
 use Doctrine\DBAL\Exception;
 use SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -18,9 +19,10 @@ class MarkAbandonedCartTaskHandler extends ScheduledTaskHandler
 
     public function __construct(
         EntityRepository $scheduledTaskRepository,
-        AbandonedCartManager $manager
+        AbandonedCartManager $manager,
+        LoggerInterface $exceptionLogger
     ) {
-        parent::__construct($scheduledTaskRepository);
+        parent::__construct($scheduledTaskRepository, $exceptionLogger);
         $this->manager = $manager;
     }
     /**

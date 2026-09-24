@@ -1,55 +1,64 @@
 <div class="sw-settings-sales-agent-form">
-  <div style="margin-top: 40px;">
-  	<sw-card :title="$tc('sales-agent-settings.fields.excludedEmails.label')" :isloading="isLoading">
+    <div style="margin-top: 40px;">
+        <sw-card
+            :title="$tc('sales-agent-settings.fields.excludedEmails.label')"
+            :isloading="isLoading"
+        >
             <sw-text-field
-            :label="$tc('sales-agent-settings.fields.excludedEmails.label')"
-            :help-text="$tc('sales-agent-settings.fields.excludedEmails.help')"
-            :placeholder="$tc('sales-agent-settings.fields.excludedEmails.help')"
-            v-model:value="global.excludedEmailsCsv"
+                :label="$tc('sales-agent-settings.fields.excludedEmails.label')"
+                :help-text="$tc('sales-agent-settings.fields.excludedEmails.help')"
+                :placeholder="$tc('sales-agent-settings.fields.excludedEmails.help')"
+                v-model:value="global.excludedEmailsCsv"
             />
-			<template #footer>
-				<sw-button variant="ghost" :isloading="isLoading" @click="saveGlobal">
-					{{ $tc('sales-agent-settings.general.save') }}
-				</sw-button>
-			</template>
-		</sw-card>
-
-    <sw-card :title="$tc('sales-agent-settings.general.user')">
-        <sw-entity-single-select
-            :key="userCriteriaKey"
-            entity="user"
-            :criteria="userCriteria"
-            v-model:value="selectedUserId"
-            labelProperty="email"
+            <template #footer>
+                <sw-button
+                    variant="ghost"
+                    :isloading="isLoading"
+                    @click="saveGlobal"
+                >
+                    {{ $tc('sales-agent-settings.general.save') }}
+                </sw-button>
+            </template>
+        </sw-card>
+        <sw-card :title="$tc('sales-agent-settings.general.user')">
+            <sw-entity-single-select
+                :key="userCriteriaKey"
+                entity="user"
+                :criteria="userCriteria"
+                v-model:value="selectedUserId"
+                labelProperty="email"
+                :isLoading="isLoading"
+                :resultLimit="25"
+                :preloadResults="true"
+                show-clearable-button
+                @update:value="onUserChanged"
+            />
+        </sw-card>
+        <sw-card
+            :title="$tc('sales-agent-settings.general.configuration')"
             :isLoading="isLoading"
-            :resultLimit="25"
-            :preloadResults="true"
-            show-clearable-button
-            @update:value="onUserChanged"
-        />
-    </sw-card>
-
-
-    <sw-card :title="$tc('sales-agent-settings.general.configuration')" :isLoading="isLoading">
-        <div class="grid grid-cols-1 gap-20">
-            <sw-number-field
-                :label="$tc('sales-agent-settings.fields.commissionPercentage.label')"
-                :help-text="$tc('sales-agent-settings.fields.commissionPercentage.help')"
-                placeholder="e.g. 5"
-                :min="0" :max="100" :step="0.01" numberType="float"
-                v-model:value="form.commissionPercentage"
-            />
-
-            <sw-number-field
-                :label="$tc('sales-agent-settings.fields.discountLimit.label')"
-                placeholder="e.g. 15"
-                :min="0" 
-                :max="100" 
-                :step="0.01" 
-                numberType="float"
-                v-model:value="form.discountLimit"
-            />
-        </div>
-    </sw-card>
-  </div>
+        >
+            <div class="grid grid-cols-1 gap-20">
+                <sw-number-field
+                    :label="$tc('sales-agent-settings.fields.commissionPercentage.label')"
+                    :help-text="$tc('sales-agent-settings.fields.commissionPercentage.help')"
+                    placeholder="e.g. 5"
+                    :min="0"
+                    :max="100"
+                    :step="0.01"
+                    numberType="float"
+                    v-model:value="form.commissionPercentage"
+                />
+                <sw-number-field
+                    :label="$tc('sales-agent-settings.fields.discountLimit.label')"
+                    placeholder="e.g. 15"
+                    :min="0"
+                    :max="100"
+                    :step="0.01"
+                    numberType="float"
+                    v-model:value="form.discountLimit"
+                />
+            </div>
+        </sw-card>
+    </div>
 </div>

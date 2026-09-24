@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SalesAgent\Cart;
 
+use Shopware\Core\Framework\Struct\ArrayEntity;
 use SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigEntity;
 use SalesAgent\Service\SalesAgentConfigProvider;
 use Shopware\Core\Checkout\Cart\Cart;
@@ -43,7 +44,7 @@ final class SalesAgentShippingPriceProcessor implements CartProcessorInterface
         }
 
         $cartExt = $toCalculate->getExtension('saCustomShipping');
-        if (!$cartExt instanceof \Shopware\Core\Framework\Struct\ArrayEntity) {
+        if (!$cartExt instanceof ArrayEntity) {
             return;
         }
 

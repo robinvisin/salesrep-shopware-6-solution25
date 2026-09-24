@@ -1,12 +1,14 @@
 <template>
-    <sw-card title="Internal Notes" class="sw-order-create-notes">
+    <sw-card
+        title="Internal Notes"
+        class="sw-order-create-notes"
+    >
         <sw-textarea-field
             v-model:value="note"
             label="Notes"
             placeholder="Write notes about this order..."
             :rows="6"
         />
-
         <sw-datepicker
             v-model:value="doNotShipUntil"
             dateType="date"

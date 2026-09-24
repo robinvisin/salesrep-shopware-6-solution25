@@ -1,6 +1,8 @@
 <sw-page class="sales-agent-settings__page">
     <template #smart-bar-header>
-        <h2>{{ $tc('sales-agent-settings.general.menuTitle') }}</h2>
+        <h2>
+            {{ $tc('sales-agent-settings.general.menuTitle') }}
+        </h2>
     </template>
 
     <template #smart-bar-actions>
@@ -8,12 +10,13 @@
             :isLoading="$refs.salesAgentForm && $refs.salesAgentForm.isLoading"
             :processSuccess="false"
             variant="primary"
-            @click="onClickSave">
+            @click="onClickSave"
+        >
             {{ $tc('sales-agent-settings.general.save') }}
         </sw-button-process>
     </template>
 
     <template #content>
-        <sw-settings-sales-agent-form ref="salesAgentForm" />
+        <sw-settings-sales-agent-form ref="salesAgentForm"/>
     </template>
 </sw-page>

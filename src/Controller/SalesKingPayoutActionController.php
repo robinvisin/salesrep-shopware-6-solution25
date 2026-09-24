@@ -13,14 +13,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(defaults: [PlatformRequest::ATTRIBUTE_ROUTE_SCOPE => [ApiRouteScope::ID]])]
+#[\Symfony\Component\Routing\Attribute\Route(defaults: [PlatformRequest::ATTRIBUTE_ROUTE_SCOPE => [ApiRouteScope::ID]])]
 class SalesKingPayoutActionController extends AbstractController
 {
     public function __construct(
         private readonly EntityRepository $userRepository
     ) {}
 
-    #[Route(
+    #[\Symfony\Component\Routing\Attribute\Route(
         path: '/api/_action/sales-king/agents/mark-paid',
         name: 'api.action.sales_king.agents.mark_paid',
         methods: ['POST'],

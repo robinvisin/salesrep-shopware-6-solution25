@@ -1,0 +1,391 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/symfony/dependency-injection/7.4/Loader/schema/services.schema.json
+services:
+    SalesAgent\Service\SalesAgentConfigProvider:
+        arguments:
+            - '@sales_agent_config.repository'
+            - '@cache.object'
+
+    SalesAgent\Service\AgentOnlyCategoryProvider:
+        arguments:
+            - '@category.repository'
+            - '@cache.object'
+
+    SalesAgent\Storefront\Controller\SalesAgentCartNoteController:
+        public: true
+        arguments:
+            - '@Shopware\Core\Checkout\Cart\SalesChannel\CartService'
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister'
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Service\SalesAgentGuard:
+        public: false
+        autowire: true
+        autoconfigure: true
+
+    SalesAgent\Storefront\Controller\SalesAgentCartSplitController:
+        public: true
+        arguments:
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister'
+            - '@Shopware\Core\Checkout\Cart\SalesChannel\CartService'
+            - '@SalesAgent\Service\SalesAgentGuard'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Subscriber\SalesAgentCartToOrderSubscriber:
+        arguments:
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\SalesAgentSplitOrderSubscriber:
+        arguments:
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister'
+            - '@order.repository'
+            - '@SalesAgent\Service\SalesAgentGuard'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Controller\AbandonedCartReminderController:
+        public: true
+        arguments:
+            - '@sales_agent_abandoned_cart.repository'
+            - '@customer.repository'
+            - '@sales_channel.repository'
+            - '@sales_channel_domain.repository'
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory'
+            - '@Shopware\Core\Content\Mail\Service\MailService'
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Controller\SalesAgentValidateSalesAgentEmailActionController:
+        public: true
+        arguments:
+            - '@user.repository'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Subscriber\SalesAgentNoteOrderSubscriber:
+        arguments:
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister'
+            - '@order.repository'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Controller\OrderClaimController:
+        public: true
+        arguments:
+            - '@order.repository'
+            - '@SalesAgent\Service\OrderCommissionRecalculator'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Service\OrderClaimRequestService:
+        public: true
+        arguments:
+            - '@order.repository'
+            - '@sales_agent_order_claim_request.repository'
+            - '@sales_agent_config.repository'
+            - '@SalesAgent\Service\AgentResolver'
+            - '@SalesAgent\Service\OrderCommissionRecalculator'
+            - '@user.repository'
+            - '@Shopware\Core\Content\Mail\Service\MailService'
+            - '@logger'
+
+    SalesAgent\Controller\OrderClaimRequestController:
+        public: true
+        arguments:
+            - '@SalesAgent\Service\OrderClaimRequestService'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Service\ClaimedAgentResolver:
+        arguments:
+            - '@sales_agent_config.repository'
+
+    SalesAgent\Service\OrderCommissionRecalculator:
+        public: true
+        arguments:
+            - '@order.repository'
+            - '@user.repository'
+            - '@sales_agent_config.repository'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+            - '@SalesAgent\Service\AgentResolver'
+            - '@SalesAgent\Service\NumberResolver'
+            - '@SalesAgent\Service\DiscountCalculator'
+            - '@SalesAgent\Service\CommissionUpserter'
+            - '@SalesAgent\Service\ClaimedAgentResolver'
+            - '@Doctrine\DBAL\Connection'
+
+    SalesAgent\Service\AgentResolver:
+        public: false
+        arguments:
+            - '@request_stack'
+            - '@sales_agent_config.repository'
+            - '@user.repository'
+
+    SalesAgent\Service\NumberResolver:
+        public: false
+        arguments:
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+
+    SalesAgent\Service\DiscountCalculator:
+        public: false
+        arguments:
+            - '@SalesAgent\Service\NumberResolver'
+
+    SalesAgent\Service\CommissionUpserter:
+        public: false
+        arguments:
+            - '@sales_agent_commission.repository'
+            - '@logger'
+
+    SalesAgent\Core\Checkout\Cart\CustomCartProcessor:
+        tags:
+            - shopware.cart.processor
+
+    SalesAgent\Subscriber\SalesAgentProductPriceOverrideSubscriber:
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\CustomerLoginSubscriber:
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Core\Content\OrderClaimRequest\OrderClaimRequestDefinition:
+        tags:
+            - shopware.entity.definition
+
+    SalesAgent\Core\Content\SalesAgentCommission\SalesAgentCommissionDefinition:
+        tags:
+            - shopware.entity.definition
+
+    SalesAgent\Repository.SalesAgentConfig: '@sales_agent_config.repository'
+
+    SalesAgent\Subscriber\OrderWrittenSubscriber:
+        arguments:
+            - '@order.repository'
+            - '@user.repository'
+            - '@sales_agent_config.repository'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+            - '@request_stack'
+            - '@SalesAgent\Service\AgentResolver'
+            - '@SalesAgent\Service\NumberResolver'
+            - '@SalesAgent\Service\DiscountCalculator'
+            - '@SalesAgent\Service\CommissionUpserter'
+            - '@Doctrine\DBAL\Connection'
+            - '@logger'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\SalesAgentCategoryAccessSubscriber:
+        arguments:
+            - '@category.repository'
+            - '@router'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\SalesAgentSearchAccessSubscriber:
+        public: false
+        arguments:
+            - '@SalesAgent\Service\AgentOnlyCategoryProvider'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\CommercialReturnSubscriber:
+        arguments:
+            - '@order.repository'
+            - '@order_return_line_item.repository'
+            - '@SalesAgent\Service\CommissionUpserter'
+            - '@Doctrine\DBAL\Connection'
+            - '@monolog.logger'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\StateTransitionSubscriber:
+        arguments:
+            - '@SalesAgent\Service\CommissionUpserter'
+            - '@order_transaction.repository'
+            - '@order_delivery.repository'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigDefinition:
+        tags:
+            - {name: shopware.entity.definition, entity: sales_agent_config}
+
+    SalesAgent\Cart\SalesAgentPriceProcessor:
+        arguments:
+            - '@SalesAgent\Service\SalesAgentConfigProvider'
+            - '@Shopware\Core\Checkout\Cart\Price\QuantityPriceCalculator'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+        tags:
+            - {name: shopware.cart.processor, priority: 4945}
+
+    SalesAgent\Cart\SalesAgentShippingPriceProcessor:
+        arguments:
+            - '@SalesAgent\Service\SalesAgentConfigProvider'
+            - '@Shopware\Core\Checkout\Cart\Price\QuantityPriceCalculator'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+        tags:
+            - {name: shopware.cart.processor, priority: -5010}
+
+    SalesAgent\Storefront\Controller\SalesAgentPriceController:
+        arguments:
+            - '@Shopware\Core\Checkout\Cart\SalesChannel\CartService'
+            - '@sales_agent_config.repository'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Controller\SalesKingPayoutActionController:
+        public: true
+        arguments:
+            - '@user.repository'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Storefront\Controller\SalesAgentValidateSalesAgentEmailRouteController:
+        public: true
+        arguments:
+            - '@user.repository'
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Storefront\Controller\SalesAgentShippingController:
+        arguments:
+            - '@Shopware\Core\Checkout\Cart\SalesChannel\CartService'
+            - '@sales_agent_config.repository'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments
+
+    SalesAgent\Subscriber\ConfirmPageSubscriber:
+        arguments:
+            - '@SalesAgent\Service\SalesAgentConfigProvider'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Subscriber\EarlyShippingEnforcementSubscriber:
+        arguments:
+            - '@shipping_method.repository'
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextPersister'
+        tags:
+            - kernel.event_subscriber
+
+    SalesAgent\Core\Content\Sitemap\CategoryUrlProvider:
+        decorates: Shopware\Core\Content\Sitemap\Provider\CategoryUrlProvider
+        arguments:
+            - '@.inner'
+            - '@category.repository'
+
+    SalesAgent\Core\Content\Sitemap\ProductUrlProvider:
+        decorates: Shopware\Core\Content\Sitemap\Provider\ProductUrlProvider
+        arguments:
+            - '@.inner'
+            - '@category.repository'
+            - '@product.repository'
+
+    SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartDefinition:
+        tags:
+            - {name: shopware.entity.definition, entity: sales_agent_abandoned_cart}
+
+    SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager:
+        arguments:
+            - '@SalesAgent\Core\Checkout\Cart\CartRepository'
+            - '@sales_agent_abandoned_cart.repository'
+
+    SalesAgent\Command\DeleteAbandonedCartCommand:
+        arguments:
+            - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
+        tags:
+            - console.command
+
+    SalesAgent\Command\MarkAbandonedCartCommand:
+        arguments:
+            - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
+        tags:
+            - console.command
+
+    SalesAgent\Command\UpdateAbandonedCartCommand:
+        arguments:
+            - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
+        tags:
+            - console.command
+
+    SalesAgent\Core\Checkout\Cart\CartRepository:
+        arguments:
+            - '@Doctrine\DBAL\Connection'
+            - '@Shopware\Core\System\SystemConfig\SystemConfigService'
+
+    SalesAgent\Service\ScheduledTask\CancelUnpaidOrdersTask:
+        tags:
+            - shopware.scheduled.task
+
+    SalesAgent\Service\ScheduledTask\CancelUnpaidOrdersTaskHandler:
+        arguments:
+            - '@scheduled_task.repository'
+            - '@order_transaction.repository'
+            - '@Shopware\Core\System\StateMachine\StateMachineRegistry'
+        tags:
+            - messenger.message_handler
+
+    SalesAgent\Service\ScheduledTask\DeleteAbandonedCartTask:
+        tags:
+            - shopware.scheduled.task
+
+    SalesAgent\Service\ScheduledTask\DeleteAbandonedCartTaskHandler:
+        arguments:
+            - '@scheduled_task.repository'
+            - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
+        tags:
+            - messenger.message_handler
+
+    SalesAgent\Service\ScheduledTask\UpdateAbandonedCartTask:
+        tags:
+            - shopware.scheduled.task
+
+    SalesAgent\Service\ScheduledTask\UpdateAbandonedCartTaskHandler:
+        arguments:
+            - '@scheduled_task.repository'
+            - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
+        tags:
+            - messenger.message_handler
+
+    SalesAgent\Service\ScheduledTask\MarkAbandonedCartTask:
+        tags:
+            - shopware.scheduled.task
+
+    SalesAgent\Service\ScheduledTask\MarkAbandonedCartTaskHandler:
+        arguments:
+            - '@scheduled_task.repository'
+            - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
+        tags:
+            - messenger.message_handler
+
+    SalesAgent\Controller\CustomerConvertController:
+        public: true
+        arguments:
+            - '@customer.repository'
+            - '@sales_channel_domain.repository'
+            - '@Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory'
+            - '@Shopware\Core\Checkout\Customer\SalesChannel\SendPasswordRecoveryMailRoute'
+        calls:
+            - [setContainer, ['@service_container']]
+        tags:
+            - controller.service_arguments

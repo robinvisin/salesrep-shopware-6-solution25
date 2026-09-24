@@ -1,127 +1,154 @@
-<sw-page class="sales-king-dashboard" page-title="isAdminUser ? 'Sales Agents' : 'Sales Agent Dashboard'">
+<sw-page
+    class="sales-king-dashboard"
+    page-title="isAdminUser ? 'Sales Agents' : 'Sales Agent Dashboard'"
+>
     <template #smart-bar-actions>
-    <router-link class="sw-button sw-button--ghost" :to="{ name: 'sales.king.dashboard.earnings' }">
-      {{ $tc('View agents all-time earnings') }}
-    </router-link>
-  </template>
-  
-  <template #content>
+        <router-link
+            class="sw-button sw-button--ghost"
+            :to="{ name: 'sales.king.dashboard.earnings' }"
+        >
+            {{ $tc('View agents all-time earnings') }}
+        </router-link>
+    </template>
 
-    <div v-if="isAdminUser">
-       <sw-data-grid
-        :dataSource="adminAgents"
-        :columns="adminAgentColumns"
-        :showSelection="false"
-        :isLoading="adminAgentsLoading"
-        :showActions="true">
-          <template #column-paid="{ item }">
-            <sw-badge v-if="isMonthPaid(item)" variant="success">Paid</sw-badge>
-            <sw-badge v-else variant="danger">Unpaid</sw-badge>
-          </template>
-
-          <template #actions="{ item }">
-            <sw-context-menu-item
-              v-if="!isMonthPaid(item)"
-              @click="onMarkAgentPaid(item)"
+    <template #content>
+        <div v-if="isAdminUser">
+            <sw-data-grid
+                :dataSource="adminAgents"
+                :columns="adminAgentColumns"
+                :showSelection="false"
+                :isLoading="adminAgentsLoading"
+                :showActions="true"
             >
-              Mark paid (this month)
-            </sw-context-menu-item>
+                <template #column-paid="{ item }">
+                    <sw-badge
+                        v-if="isMonthPaid(item)"
+                        variant="success"
+                    >Paid</sw-badge>
+                    <sw-badge
+                        v-else
+                        variant="danger"
+                    >Unpaid</sw-badge>
+                </template>
 
-            <sw-context-menu-item
-              v-else
-              disabled
-            >
-              Already paid
-            </sw-context-menu-item>
-          </template>
+                <template #actions="{ item }">
+                    <sw-context-menu-item
+                        v-if="!isMonthPaid(item)"
+                        @click="onMarkAgentPaid(item)"
+                    >
+                        Mark paid (this month)
+                    </sw-context-menu-item>
+                    <sw-context-menu-item
+                        v-else
+                        disabled
+                    >
+                        Already paid
+                    </sw-context-menu-item>
+                </template>
 
-          <template #column-commissionPct="{ item }">
+                <template #column-commissionPct="{ item }">
             {{ item.commissionPct }}%
           </template>
 
-          <template #column-orders="{ item }">
-          {{ isMonthPaid(item) ? 0 : (item.orders || 0) }}
-          </template>
+                <template #column-orders="{ item }">
+                    {{ isMonthPaid(item) ? 0 : (item.orders || 0) }}
+                </template>
 
-          <template #column-commission="{ item }">
-            {{ formatCurrency(isMonthPaid(item) ? 0 : item.commission) }}
-          </template>
-          <template #column-sales="{ item }">
-            {{ formatCurrency(isMonthPaid(item) ? 0 : item.sales) }}
-          </template>
-        </sw-data-grid>
-    </div>
+                <template #column-commission="{ item }">
+                    {{ formatCurrency(isMonthPaid(item) ? 0 : item.commission) }}
+                </template>
 
-    <template style="margin-top:30px;"  v-else>
-      <div class="sales-king-dashboard__kpis" style="margin-top:30px;">
-        <sales-king-kpi-card title="Sales (This Month)" :value="kpi.sales" type="currency"/>
-        <sales-king-commission-chart title="Commission Trend (This Month)"/>
-      </div>
-        <sw-card
-          class="sales-king-dashboard__payout-history"
-          :title="$tc('Payout history')"
-          style="margin-top: 20px;"
+                <template #column-sales="{ item }">
+                    {{ formatCurrency(isMonthPaid(item) ? 0 : item.sales) }}
+                </template>
+            </sw-data-grid>
+        </div>
+        <template
+            style="margin-top:30px;"
+            v-else
         >
-          <sw-data-grid
-            :dataSource="payoutHistory"
-            :columns="payoutHistoryColumns"
-            :showSelection="false"
-            :showActions="false"
-            :isLoading="payoutHistoryLoading"
-          >
-            <template #toolbar>
-              <sw-button
-                variant="ghost"
-                size="small"
-                :disabled="payoutHistoryLoading || payoutHistory.length === 0"
-                @click="downloadPayoutHistoryCsv"
-              >
-                Download CSV
-              </sw-button>
-            </template>
-            <template #column-paid="{ item }">
-              <sw-badge v-if="item.paid" variant="success">Paid</sw-badge>
-              <sw-badge v-else variant="danger">Unpaid</sw-badge>
-            </template>
+            <div
+                class="sales-king-dashboard__kpis"
+                style="margin-top:30px;"
+            >
+                <sales-king-kpi-card
+                    title="Sales (This Month)"
+                    :value="kpi.sales"
+                    type="currency"
+                />
+                <sales-king-commission-chart title="Commission Trend (This Month)"/>
+            </div>
+            <sw-card
+                class="sales-king-dashboard__payout-history"
+                :title="$tc('Payout history')"
+                style="margin-top: 20px;"
+            >
+                <sw-data-grid
+                    :dataSource="payoutHistory"
+                    :columns="payoutHistoryColumns"
+                    :showSelection="false"
+                    :showActions="false"
+                    :isLoading="payoutHistoryLoading"
+                >
+                    <template #toolbar>
+                        <sw-button
+                            variant="ghost"
+                            size="small"
+                            :disabled="payoutHistoryLoading || payoutHistory.length === 0"
+                            @click="downloadPayoutHistoryCsv"
+                        >
+                            Download CSV
+                        </sw-button>
+                    </template>
 
-            <template #column-sales="{ item }">
-              {{ formatCurrency(item.sales) }}
-            </template>
+                    <template #column-paid="{ item }">
+                        <sw-badge
+                            v-if="item.paid"
+                            variant="success"
+                        >Paid</sw-badge>
+                        <sw-badge
+                            v-else
+                            variant="danger"
+                        >Unpaid</sw-badge>
+                    </template>
 
-            <template #column-commission="{ item }">
-              {{ formatCurrency(item.commission) }}
-            </template>
+                    <template #column-sales="{ item }">
+                        {{ formatCurrency(item.sales) }}
+                    </template>
 
-            <template #column-paidAt="{ item }">
-              {{ item.paidAt ? new Date(item.paidAt).toLocaleString() : '—' }}
-            </template>
-          </sw-data-grid>
+                    <template #column-commission="{ item }">
+                        {{ formatCurrency(item.commission) }}
+                    </template>
 
-          <div v-if="!payoutHistoryLoading && payoutHistory.length === 0" style="padding: 12px;">
-            No payouts yet.
-          </div>
-        </sw-card>
-
-      <sales-king-customers-grid
-        :customers="customers"
-        :columns="customerColumns"
-        :count="kpi.customers"
-        :loading="showCustomerSkeleton"
-        :page="customerPage"
-        :limit="customerLimit"
-        @pageChange="onCustomerPageChange"
-      />
-
-      <sales-king-orders-grid
-        :orders="orders"
-        :columns="orderColumns"
-        :count="kpi.orders"
-        :page="orderPage"
-        :limit="orderLimit"
-        @pageChange="onOrderPageChange"
-        :loading="showOrderSkeleton"
-      />
+                    <template #column-paidAt="{ item }">
+                        {{ item.paidAt ? new Date(item.paidAt).toLocaleString() : '—' }}
+                    </template>
+                </sw-data-grid>
+                <div
+                    v-if="!payoutHistoryLoading && payoutHistory.length === 0"
+                    style="padding: 12px;"
+                >
+                    No payouts yet.
+                </div>
+            </sw-card>
+            <sales-king-customers-grid
+                :customers="customers"
+                :columns="customerColumns"
+                :count="kpi.customers"
+                :loading="showCustomerSkeleton"
+                :page="customerPage"
+                :limit="customerLimit"
+                @pageChange="onCustomerPageChange"
+            />
+            <sales-king-orders-grid
+                :orders="orders"
+                :columns="orderColumns"
+                :count="kpi.orders"
+                :page="orderPage"
+                :limit="orderLimit"
+                @pageChange="onOrderPageChange"
+                :loading="showOrderSkeleton"
+            />
+        </template>
     </template>
-
-  </template>
 </sw-page>

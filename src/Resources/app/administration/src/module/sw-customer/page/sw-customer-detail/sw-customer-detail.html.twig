@@ -26,43 +26,54 @@
 {% endblock %}
 
 {% block sw_customer_detail %}
-    {% parent %}
+{% parent() %}
 
-    <sw-modal
-        v-if="showDuplicateModal"
-        :title="$tc('sales-agent.customerConvert.duplicateModalTitle')"
-        @modal-close="showDuplicateModal = false"
-    >
-        <p>{{ $tc('sales-agent.customerConvert.errorDuplicate') }}</p>
+<sw-modal
+    v-if="showDuplicateModal"
+    :title="$tc('sales-agent.customerConvert.duplicateModalTitle')"
+    @modal-close="showDuplicateModal = false"
+>
+    <p>
+        {{ $tc('sales-agent.customerConvert.errorDuplicate') }}
+    </p>
+    <template #modal-footer>
+        <sw-button
+            variant="primary"
+            @click="showDuplicateModal = false"
+        >
+            {{ $tc('global.default.cancel') }}
+        </sw-button>
+    </template>
+</sw-modal>
 
-        <template #modal-footer>
-            <sw-button variant="primary" @click="showDuplicateModal = false">
-                {{ $tc('global.default.cancel') }}
-            </sw-button>
-        </template>
-    </sw-modal>
-
-    <sw-modal
-        v-if="showConvertModal"
-        :title="$tc('sales-agent.customerConvert.modalTitle')"
-        @modal-close="closeConvertModal"
-    >
-        <p>{{ $tc('sales-agent.customerConvert.modalMessage') }}</p>
-
-        <template #modal-footer>
-            <sw-button @click="closeConvertModal">
-                {{ $tc('global.default.cancel') }}
-            </sw-button>
-            <sw-button variant="primary" @click="onConfirmConvertGuest">
-                {{ $tc('sales-agent.customerConvert.modalConfirm') }}
-            </sw-button>
-        </template>
-    </sw-modal>
+<sw-modal
+    v-if="showConvertModal"
+    :title="$tc('sales-agent.customerConvert.modalTitle')"
+    @modal-close="closeConvertModal"
+>
+    <p>
+        {{ $tc('sales-agent.customerConvert.modalMessage') }}
+    </p>
+    <template #modal-footer>
+        <sw-button @click="closeConvertModal">
+            {{ $tc('global.default.cancel') }}
+        </sw-button>
+        <sw-button
+            variant="primary"
+            @click="onConfirmConvertGuest"
+        >
+            {{ $tc('sales-agent.customerConvert.modalConfirm') }}
+        </sw-button>
+    </template>
+</sw-modal>
 {% endblock %}
 
 {% block sw_customer_detail_content_tab_general %}
-    {% parent %}
-    <sw-tabs-item :route="{ name: 'sw.customer.detail.custom', params: { id: $route.params.id } }">
-        {{ $tc('abandoned-cart-admin.cardTitleCustomerCarts') }}
-    </sw-tabs-item>
+{% parent() %}
+
+<sw-tabs-item
+    :route="{ name: 'sw.customer.detail.custom', params: { id: $route.params.id } }"
+>
+    {{ $tc('abandoned-cart-admin.cardTitleCustomerCarts') }}
+</sw-tabs-item>
 {% endblock %}

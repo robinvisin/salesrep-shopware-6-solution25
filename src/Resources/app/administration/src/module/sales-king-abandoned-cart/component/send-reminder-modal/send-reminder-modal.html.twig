@@ -5,15 +5,16 @@
 >
     <div class="sw-field">
         <p style="margin-bottom: 10px;">
-            <strong>{{ $tc('abandoned-cart-admin.reminderTo') }}:</strong>
+            <strong>
+    {{ $tc('abandoned-cart-admin.reminderTo') }}
+    :
+</strong>
             {{ cart.email || '—' }}
         </p>
-
         <sw-switch-field
             v-model:value="includeItems"
             :label="$tc('abandoned-cart-admin.reminderIncludeItems')"
         />
-
         <sw-textarea-field
             v-model:value="note"
             :label="$tc('abandoned-cart-admin.reminderNoteLabel')"
@@ -22,13 +23,15 @@
             style="margin-top: 12px;"
         />
     </div>
-
     <template #modal-footer>
         <sw-button @click="onClose">
             {{ $tc('Cancel') }}
         </sw-button>
-
-        <sw-button variant="primary" :isLoading="isSending" @click="onConfirm">
+        <sw-button
+            variant="primary"
+            :isLoading="isSending"
+            @click="onConfirm"
+        >
             {{ $tc('abandoned-cart-admin.reminderSendButton') }}
         </sw-button>
     </template>

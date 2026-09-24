@@ -1,18 +1,18 @@
 {% block sw_search_bar_item_cms_page %}
-    {% parent %}
+{% parent() %}
 
-    <router-link
-        v-else-if="type === 'sales_agent_abandoned_cart'"
-        :to="{ name: 'abandoned.cart.list' }"
-        class="sw-search-bar-item__link">
-
-        {% block sw_search_bar_item_abandoned_cart_label %}
+<router-link
+    v-else-if="type === 'sales_agent_abandoned_cart'"
+    :to="{ name: 'abandoned.cart.list' }"
+    class="sw-search-bar-item__link"
+>
+    {% block sw_search_bar_item_abandoned_cart_label %}
     <span class="sw-search-bar-item__label">
-          <sw-highlight-text
-              :searchTerm="searchTerm"
-              :text="item.firstName + ' ' + item.lastName"
-          />
-      </span>
-        {% endblock %}
-    </router-link>
+        <sw-highlight-text
+            :searchTerm="searchTerm"
+            :text="item.firstName + ' ' + item.lastName"
+        />
+    </span>
+    {% endblock %}
+</router-link>
 {% endblock %}

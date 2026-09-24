@@ -16,11 +16,6 @@ use Shopware\Core\System\User\UserDefinition;
 
 class OrderSalesAgentExtension extends EntityExtension
 {
-    public function getDefinitionClass(): string
-    {
-        return OrderDefinition::class;
-    }
-
     public function extendFields(FieldCollection $collection): void
     {
         $collection->add(
@@ -42,5 +37,9 @@ class OrderSalesAgentExtension extends EntityExtension
                 false
             ))->addFlags(new ApiAware(), new SetNullOnDelete())
         );
+    }
+    public function getEntityName(): string
+    {
+        return OrderDefinition::ENTITY_NAME;
     }
 }

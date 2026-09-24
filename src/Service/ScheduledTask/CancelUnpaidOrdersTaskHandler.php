@@ -40,9 +40,10 @@ class CancelUnpaidOrdersTaskHandler extends ScheduledTaskHandler
         EntityRepository $transactionRepository,
         StateMachineRegistry $stateMachineRegistry,
         ?LoggerInterface $logger = null,
-        int $secondsBeforeCancel = 172800
+        int $secondsBeforeCancel = 172800,
+        LoggerInterface $exceptionLogger
     ) {
-        parent::__construct($scheduledTaskRepository);
+        parent::__construct($scheduledTaskRepository, $exceptionLogger);
 
         $this->transactionRepository = $transactionRepository;
         $this->stateMachineRegistry  = $stateMachineRegistry;

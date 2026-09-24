@@ -1,29 +1,42 @@
-
 {% block sw_order_detail_general %}
 <sw-card
-        v-if="isSalesAgentUser && !isOrderCancelled"
+    v-if="isSalesAgentUser && !isOrderCancelled"
     title="Commission claim request"
     :isLoading="claimReqLoading"
     class="sales-agent-claim-request-card"
 >
     <template v-if="claimReqStatus === 'approved'">
-        <sw-alert variant="success" appearance="notification" :showIcon="true">
+        <sw-alert
+            variant="success"
+            appearance="notification"
+            :showIcon="true"
+        >
             This order’s commission is already claimed & approved.
         </sw-alert>
         <div>
-            <strong>Claimed agent:</strong> <code>{{ claimReqApprovedUserId }}</code>
+            <strong>Claimed agent:</strong>
+            <code>{{ claimReqApprovedUserId }}</code>
         </div>
     </template>
 
     <template v-else-if="claimReqStatus === 'pending'">
-        <sw-alert variant="info" appearance="notification" :showIcon="true">
+        <sw-alert
+            variant="info"
+            appearance="notification"
+            :showIcon="true"
+        >
             Claim request pending admin approval.
         </sw-alert>
         <div style="display:flex; gap:10px; align-items:center;">
-            <div><strong>Request ID:</strong> <code>{{ claimReqId }}</code></div>
-            <div><strong>Requested at:</strong> {{ claimReqRequestedAt }}</div>
+            <div>
+                <strong>Request ID:</strong>
+                <code>{{ claimReqId }}</code>
+            </div>
+            <div>
+                <strong>Requested at:</strong>
+                {{ claimReqRequestedAt }}
+            </div>
         </div>
-
         <div style="margin-top:10px;">
             <strong>Reason:</strong>
             <div style="opacity:.85;">{{ claimReqReason || '-' }}</div>
@@ -36,12 +49,16 @@
             label="Reason (optional)"
             placeholder="Explain why this commission should be attributed to you…"
         />
-
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
-            <sw-button variant="ghost" @click="loadClaimRequestStatus" :isLoading="claimReqLoading">
+        <div
+            style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"
+        >
+            <sw-button
+                variant="ghost"
+                @click="loadClaimRequestStatus"
+                :isLoading="claimReqLoading"
+            >
                 Refresh status
             </sw-button>
-
             <sw-button
                 variant="primary"
                 @click="submitClaimRequest"
@@ -53,5 +70,6 @@
         </div>
     </template>
 </sw-card>
-    {% parent %}
+
+{% parent() %}
 {% endblock %}

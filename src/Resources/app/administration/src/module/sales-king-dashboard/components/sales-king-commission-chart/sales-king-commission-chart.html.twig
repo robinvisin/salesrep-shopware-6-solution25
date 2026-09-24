@@ -1,26 +1,38 @@
 {% block sales_king_commission_chart %}
-    <sw-card :isLoading="isLoading" class="mt-4">
-        <template style="display:contents;" #title>
-            <div style="display:contents;justify-content:space-between;align-items:center;width:100%;">
-                <template v-if="isLoading">
-                    <div class="kpi-skeleton"></div>
-                    <div class="kpi-skeleton"></div>
-                </template>
-                <template v-else>
-                <span>{{ title }} {{ formatCurrency(monthlyTotal) }}</span>
+<sw-card
+    :isLoading="isLoading"
+    class="mt-4"
+>
+    <template
+        style="display:contents;"
+        #title
+    >
+        <div
+            style="display:contents;justify-content:space-between;align-items:center;width:100%;"
+        >
+            <template v-if="isLoading">
+                <div class="kpi-skeleton"></div>
+                <div class="kpi-skeleton"></div>
+            </template>
 
+            <template v-else>
+                <span>
+                    {{ title }}
+                    {{ formatCurrency(monthlyTotal) }}
+                </span>
                 <router-link
-                        :to="{ name: 'sales.king.dashboard.earnings' }"
-                        style="font-size:13px; color: var(--color-shopware-brand-500); text-decoration:none;"
+                    :to="{ name: 'sales.king.dashboard.earnings' }"
+                    style="font-size:13px; color: var(--color-shopware-brand-500); text-decoration:none;"
                 >
                     View all time earnings →
                 </router-link>
-                </template>
-            </div>
-        </template>
-        <sw-chart
-                type="line"
-                :series="commissionSeries"
-                :options="commissionOptions" />
-    </sw-card>
+            </template>
+        </div>
+    </template>
+    <sw-chart
+        type="line"
+        :series="commissionSeries"
+        :options="commissionOptions"
+    />
+</sw-card>
 {% endblock %}

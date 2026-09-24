@@ -13,9 +13,11 @@
         <template #column-label="{ item }">
             {{ item.label }}
         </template>
+
         <template #column-quantity="{ item }">
             {{ item.quantity }}
         </template>
+
         <template #column-unitPrice="{ item }">
             {{ formatCurrency(item.unitPrice) }}
         </template>

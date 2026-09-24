@@ -1,4 +1,7 @@
-<div class="sales-king-pagination" v-if="totalPages > 1">
+<div
+    class="sales-king-pagination"
+    v-if="totalPages > 1"
+>
     <button
         class="pagination-arrow"
         :disabled="!hasPrevious"
@@ -6,7 +9,6 @@
     >
         ‹
     </button>
-
     <template v-for="p in visiblePages">
         <span
             v-if="p.ellipsis"
@@ -23,7 +25,6 @@
             {{ p.number }}
         </button>
     </template>
-
     <button
         class="pagination-arrow"
         :disabled="!hasNext"

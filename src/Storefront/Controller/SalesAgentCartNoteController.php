@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(defaults: ['_routeScope' => ['store-api']])]
+#[\Symfony\Component\Routing\Attribute\Route(defaults: ['_routeScope' => ['store-api']])]
 class SalesAgentCartNoteController
 {
     public function __construct(
@@ -21,7 +21,7 @@ class SalesAgentCartNoteController
     ) {
     }
 
-    #[Route(
+    #[\Symfony\Component\Routing\Attribute\Route(
         path: '/store-api/sales-agent/cart/note',
         name: 'store-api.sales-agent.cart.note',
         methods: ['POST']

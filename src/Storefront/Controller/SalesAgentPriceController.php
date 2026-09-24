@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(defaults: ['_routeScope' => ['storefront']])]
+#[\Symfony\Component\Routing\Attribute\Route(defaults: ['_routeScope' => ['storefront']])]
 final class SalesAgentPriceController extends StorefrontController
 {
     public function __construct(
@@ -29,7 +29,7 @@ final class SalesAgentPriceController extends StorefrontController
     }
 
 
-    #[Route(
+    #[\Symfony\Component\Routing\Attribute\Route(
         path: '/sales-agent/line-item/price',
         name: 'frontend.sales_agent.set_price',
         options: ['seo' => false],

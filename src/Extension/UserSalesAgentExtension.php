@@ -16,11 +16,6 @@ use Shopware\Core\System\User\UserDefinition;
 
 class UserSalesAgentExtension extends EntityExtension
 {
-    public function getDefinitionClass(): string
-    {
-        return UserDefinition::class;
-    }
-
     public function extendFields(FieldCollection $collection): void
     {
         $collection->add(
@@ -48,5 +43,9 @@ class UserSalesAgentExtension extends EntityExtension
                 'sales_agent_id'
             ))->addFlags(new ApiAware())
         );
+    }
+    public function getEntityName(): string
+    {
+        return UserDefinition::ENTITY_NAME;
     }
 }

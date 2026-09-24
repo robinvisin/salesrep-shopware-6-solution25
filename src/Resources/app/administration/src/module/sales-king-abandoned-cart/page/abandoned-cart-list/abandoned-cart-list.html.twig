@@ -16,7 +16,10 @@
                 :showSelection="false"
             >
                 <template #column-fullName="{ item }">
-                    <a :href="`/admin#/sw/customer/detail/${item.customerId}/base`" class="link">
+                    <a
+                        :href="`/admin#/sw/customer/detail/${item.customerId}/base`"
+                        class="link"
+                    >
                         {{ item.fullName }}
                     </a>
                 </template>
@@ -36,12 +39,17 @@
                             totalPrice: i.price?.totalPrice || 0,
                         })))"
                     >
-                        {{ item.lineItems.length }} {{ $tc('abandoned-cart-admin.items') }}
+                        {{ item.lineItems.length }}
+                        {{ $tc('abandoned-cart-admin.items') }}
                     </div>
                 </template>
 
                 <template #column-actions="{ item }">
-                    <div style="cursor: pointer; color: #189eff;" size="small" @click="openModal('createOrder', item)">
+                    <div
+                        style="cursor: pointer; color: #189eff;"
+                        size="small"
+                        @click="openModal('createOrder', item)"
+                    >
                         {{ $tc('abandoned-cart-admin.buttonCreateOrder') }}
                     </div>
                 </template>
@@ -57,17 +65,17 @@
                     >
                         {{ $tc('abandoned-cart-admin.viewLineItems') }}
                     </sw-context-menu-item>
-
                     <sw-context-menu-item @click="openModal('sendReminder', item)">
                         {{ $tc('Send Reminder') }}
                     </sw-context-menu-item>
-
-                    <sw-context-menu-item variant="danger" @click="openModal('deleteCart', item)">
+                    <sw-context-menu-item
+                        variant="danger"
+                        @click="openModal('deleteCart', item)"
+                    >
                         {{ $tc('abandoned-cart-admin.delete') }}
                     </sw-context-menu-item>
                 </template>
             </sw-data-grid>
-
             <sw-pagination
                 :total="total"
                 :limit="limit"
@@ -77,21 +85,18 @@
             />
         </template>
     </sw-page>
-
     <line-items-modal
         v-if="currentModal === 'lineItems'"
         :visible="true"
         :items="modalPayload"
         @close="closeModal"
     />
-
     <create-order-confirmation-modal
         v-if="currentModal === 'createOrder'"
         :visible="true"
         @close="closeModal"
         @confirm="confirmCreateOrder"
     />
-
     <send-reminder-modal
         v-if="currentModal === 'sendReminder'"
         :visible="true"
@@ -99,7 +104,6 @@
         @close="closeModal"
         @confirm="confirmSendReminder"
     />
-
     <delete-confirmation-modal
         v-if="currentModal === 'deleteCart'"
         :visible="true"

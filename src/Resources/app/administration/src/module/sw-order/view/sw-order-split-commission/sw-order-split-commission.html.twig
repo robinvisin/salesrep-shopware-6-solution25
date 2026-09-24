@@ -1,22 +1,24 @@
 <template>
-  <sw-card title="Split commission" class="sw-card--grid">
-    <sw-text-field
-      v-model:value="splitEmail"
-      label="Other agent email"
-      placeholder="agent@example.com"
-      :helpText="emailValid === false ? reasonToMessage(emailReason) : (emailValid === true ? 'Valid sales agent.' : '')"
-    />
-
-    <sw-number-field
-      v-model:value="splitPercent"
-      label="Split percent (%)"
-      :min="0"
-      :max="100"
-      :step="1"
-      :digits="0"
-      @keydown="onPercentKeydown"
-      @change="onPercentChange"
-      @blur="onPercentChange(splitPercent)"
-    />
-  </sw-card>
+    <sw-card
+        title="Split commission"
+        class="sw-card--grid"
+    >
+        <sw-text-field
+            v-model:value="splitEmail"
+            label="Other agent email"
+            placeholder="agent@example.com"
+            :helpText="emailValid === false ? reasonToMessage(emailReason) : (emailValid === true ? 'Valid sales agent.' : '')"
+        />
+        <sw-number-field
+            v-model:value="splitPercent"
+            label="Split percent (%)"
+            :min="0"
+            :max="100"
+            :step="1"
+            :digits="0"
+            @keydown="onPercentKeydown"
+            @change="onPercentChange"
+            @blur="onPercentChange(splitPercent)"
+        />
+    </sw-card>
 </template>

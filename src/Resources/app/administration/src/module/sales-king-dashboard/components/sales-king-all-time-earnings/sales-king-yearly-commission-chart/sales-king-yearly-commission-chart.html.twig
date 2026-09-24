@@ -1,22 +1,27 @@
 <sw-card :isLoading="isLoading">
     <template #title>
-        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+        <div
+            style="display:flex;justify-content:space-between;align-items:center;width:100%;"
+        >
             <span>Commission Trend (This Year)</span>
             <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:12px;opacity:.7;">Year</span>
                 <sw-single-select
-                        v-model:value="selectedYear"
-                        :options="yearOptions"
-                        labelProperty="label"
-                        valueProperty="value"
-                        size="small"
-                        show-clearable-button="false"
-                        class="sw-field--small"
-                        style="min-width:110px"
+                    v-model:value="selectedYear"
+                    :options="yearOptions"
+                    labelProperty="label"
+                    valueProperty="value"
+                    size="small"
+                    show-clearable-button="false"
+                    class="sw-field--small"
+                    style="min-width:110px"
                 />
             </div>
         </div>
     </template>
-
-    <sw-chart type="line" :series="series" :options="options" />
+    <sw-chart
+        type="line"
+        :series="series"
+        :options="options"
+    />
 </sw-card>
