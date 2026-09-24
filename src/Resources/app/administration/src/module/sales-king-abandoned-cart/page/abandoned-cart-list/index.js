@@ -206,14 +206,13 @@ Component.register('abandoned-cart-list', {
         return;
       }
 
+      // 6.7: swOrder is a Pinia store. resetState, setContextToken and setSalesChannelId no
+      // longer exist on it; Pinia's built-in $reset() restores the whole store to its initial
+      // state, which is what this fallback chain was emulating one field at a time.
       try {
-        await Shopware.State.dispatch('swOrder/resetState');
+        Shopware.Store.get('swOrder').$reset();
       } catch (e) {
-        try { Shopware.State.commit('swOrder/setCustomer', null); } catch {}
-        try { Shopware.State.commit('swOrder/setCart', null); } catch {}
-        try { Shopware.State.commit('swOrder/setCartLineItems', []); } catch {}
-        try { Shopware.State.commit('swOrder/setContextToken', null); } catch {}
-        try { Shopware.State.commit('swOrder/setSalesChannelId', null); } catch {}
+        Shopware.Utils.debug.warn('sales-agent', 'could not reset swOrder state', e);
       }
 
       Abandoned.disableClear();

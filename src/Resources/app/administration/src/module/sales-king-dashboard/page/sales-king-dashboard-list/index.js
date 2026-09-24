@@ -65,7 +65,7 @@ Component.register('sales-king-dashboard-list', {
     },
     computed: {
       currentAdminUser() {
-        return Shopware.State.get('session')?.currentUser || null;
+        return Shopware.Store.get('session')?.currentUser || null;
       },
       isAdminUser() {
         return !!this.currentAdminUser?.admin; 

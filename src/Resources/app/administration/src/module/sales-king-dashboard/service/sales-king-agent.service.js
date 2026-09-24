@@ -192,7 +192,7 @@ export default class SalesKingAgentService {
     }
 
     getCurrentUserId() {
-        const user = Shopware.State.get('session')?.currentUser;
+        const user = Shopware.Store.get('session')?.currentUser;
         return user?.id || null;
     }
 

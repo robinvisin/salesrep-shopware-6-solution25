@@ -32,7 +32,7 @@ Component.override('sw-order-detail-general', {
     },
 
     currentUser() {
-      return Shopware.State.get('session')?.currentUser || null;
+      return Shopware.Store.get('session')?.currentUser || null;
     },
 
     isSalesAgentUser() {

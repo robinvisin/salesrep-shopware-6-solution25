@@ -124,7 +124,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     async fetchAgentConfig() {
         try {
             const repo = this.repositoryFactory.create('sales_agent_config');
-            const userId = Shopware.State.get('session')?.currentUser?.id;
+            const userId = Shopware.Store.get('session')?.currentUser?.id;
             if (!userId) {
                 this.agentConfig = null;
                 return;
@@ -206,7 +206,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
                   item.payload.saFinalUnitPrice = allowed;
                   item.payload.saCustomPrice = allowed;
 
-                  const userId = Shopware.State.get('session')?.currentUser?.id;
+                  const userId = Shopware.Store.get('session')?.currentUser?.id;
                   if (userId) item.payload.saEditedByAgentId = userId;
 
                   return;
@@ -217,7 +217,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
           item.payload.saFinalUnitPrice = round2(newPrice);
           item.payload.saCustomPrice = round2(newPrice);
 
-          const userId = Shopware.State.get('session')?.currentUser?.id;
+          const userId = Shopware.Store.get('session')?.currentUser?.id;
           if (userId) item.payload.saEditedByAgentId = userId;
       },
 
