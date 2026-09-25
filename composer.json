@@ -1,17 +1,30 @@
 {
     "name": "solution25/sales-agent-shopware-6-solution25",
-    "description": "Sales Agent Plugin for Shopware 6 ",
+    "description": "Sales Agent Plugin for Shopware 6",
     "type": "shopware-platform-plugin",
     "version": "1.0.2",
     "license": "MIT",
     "require": {
-        "shopware/core": "~6.7.0"
+        "shopware/core": "~6.7.0",
+        "shopware/storefront": "~6.7.0"
     },
     "extra": {
         "shopware-plugin-class": "SalesAgent\\SalesAgent",
         "label": {
             "de-DE": "Sales Agent Plugin für Shopware 6",
             "en-GB": "Sales Agent Plugin for Shopware 6"
+        },
+        "description": {
+            "de-DE": "Eigener Arbeitsbereich fuer Vertriebsmitarbeiter: zugewiesene Kunden uebernehmen, Bestellungen anlegen, abgebrochene Warenkoerbe verfolgen und Provisionen auswerten.",
+            "en-GB": "Gives sales agents their own workspace: claim assigned customers, place orders on their behalf, follow up abandoned carts and track commission earnings from one dashboard."
+        },
+        "manufacturerLink": {
+            "de-DE": "https://solution25.com/",
+            "en-GB": "https://solution25.com/en/home_en/"
+        },
+        "supportLink": {
+            "de-DE": "https://solution25.com/",
+            "en-GB": "https://solution25.com/en/home_en/"
         }
     },
     "autoload": {
@@ -43,5 +56,11 @@
         "allow-plugins": {
             "symfony/runtime": true
         }
-    }
+    },
+    "authors": [
+        {
+            "name": "solution 25",
+            "role": "Manufacturer"
+        }
+    ]
 }
