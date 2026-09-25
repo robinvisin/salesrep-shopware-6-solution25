@@ -25,7 +25,9 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CustomerConvertController extends AbstractController
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Customer\CustomerCollection> */
         private readonly EntityRepository $customerRepository,
+        /** @var EntityRepository<\Shopware\Core\System\SalesChannel\Aggregate\SalesChannelDomain\SalesChannelDomainCollection> */
         private readonly EntityRepository $salesChannelDomainRepository,
         private readonly AbstractSalesChannelContextFactory $salesChannelContextFactory,
         private readonly AbstractSendPasswordRecoveryMailRoute $recoveryRoute,

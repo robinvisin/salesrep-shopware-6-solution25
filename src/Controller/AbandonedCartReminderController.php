@@ -21,9 +21,13 @@ use Symfony\Component\Routing\Attribute\Route;
 class AbandonedCartReminderController
 {
     public function __construct(
+        /** @var EntityRepository<\SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartCollection> */
         private readonly EntityRepository $abandonedCartRepository,
+        /** @var EntityRepository<\Shopware\Core\Checkout\Customer\CustomerCollection> */
         private readonly EntityRepository $customerRepository,
+        /** @var EntityRepository<\Shopware\Core\System\SalesChannel\SalesChannelCollection> */
         private readonly EntityRepository $salesChannelRepository,
+        /** @var EntityRepository<\Shopware\Core\System\SalesChannel\Aggregate\SalesChannelDomain\SalesChannelDomainCollection> */
         private readonly EntityRepository $salesChannelDomainRepository,
         private readonly AbstractSalesChannelContextFactory $salesChannelContextFactory,
         private readonly MailService $mailService,

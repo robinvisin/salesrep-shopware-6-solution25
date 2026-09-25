@@ -32,8 +32,11 @@ final class OrderCommissionRecalculator
     private const CTX_STATE_SKIP_SPLIT_RECOMPUTE = 'sales_agent_skip_split_recompute';
 
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository    $orderRepo,
+        /** @var EntityRepository<\Shopware\Core\System\User\UserCollection> */
         private readonly EntityRepository    $userRepo,
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository    $salesAgentConfigRepo,
         private readonly SystemConfigService $systemConfig,
         private readonly AgentResolver       $agentResolver,

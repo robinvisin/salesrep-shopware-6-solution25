@@ -13,7 +13,9 @@ use Shopware\Core\Framework\Uuid\Uuid;
 final class OrderClaimService
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository $orderRepo,
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository $salesAgentConfigRepo,
         private readonly AgentResolver $agentResolver,
         private readonly OrderCommissionRecalculator $recalculator

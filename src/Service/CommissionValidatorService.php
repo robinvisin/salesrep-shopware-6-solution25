@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 class CommissionValidatorService
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\System\User\UserCollection> */
         private readonly EntityRepository $userRepository,
     ) {
     }

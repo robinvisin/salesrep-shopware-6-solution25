@@ -23,6 +23,7 @@ final class SalesAgentPriceController extends StorefrontController
 {
     public function __construct(
         private readonly CartService         $cartService,
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository    $salesAgentConfigRepository,
         private readonly SystemConfigService $systemConfig,
     ) {

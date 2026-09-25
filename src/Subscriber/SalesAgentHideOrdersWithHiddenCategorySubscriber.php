@@ -22,8 +22,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 final class SalesAgentHideOrdersWithHiddenCategorySubscriber implements EventSubscriberInterface
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Content\Category\CategoryCollection> */
         private readonly EntityRepository $categoryRepository,
+        /** @var EntityRepository<\Shopware\Core\Content\Product\ProductCollection> */
         private readonly EntityRepository $productRepository,
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository $orderRepository,
         private readonly LoggerInterface $logger,
     ) {

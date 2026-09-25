@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class OrderClaimController extends AbstractController
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository $orderRepo,
         private readonly OrderCommissionRecalculator $recalculator
     ) {

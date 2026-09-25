@@ -16,6 +16,7 @@ final class AbandonedCartManager
 {
     public function __construct(
         private readonly CartRepository $cartRepository,
+        /** @var EntityRepository<\SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartCollection> */
         private readonly EntityRepository $abandonedCartRepository,
     ) {
     }

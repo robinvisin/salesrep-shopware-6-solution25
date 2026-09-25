@@ -14,6 +14,7 @@ use Shopware\Core\Framework\Uuid\Uuid;
 final class ClaimedAgentResolver
 {
     public function __construct(
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository $salesAgentConfigRepo
     ) {
     }

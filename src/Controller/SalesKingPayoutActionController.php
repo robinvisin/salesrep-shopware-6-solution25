@@ -17,6 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class SalesKingPayoutActionController extends AbstractController
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\System\User\UserCollection> */
         private readonly EntityRepository $userRepository
     ) {}
 

@@ -22,6 +22,7 @@ final class SalesAgentConfigProvider
      * @param CacheInterface $cache
      */
     public function __construct(
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository $salesAgentConfigRepository,
         private readonly CacheInterface $cache
     ) {

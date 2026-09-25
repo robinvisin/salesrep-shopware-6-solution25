@@ -25,6 +25,7 @@ final class CommercialReturnSubscriber implements EventSubscriberInterface
         'Shopware\\Commercial\\ReturnManagement\\Entity\\OrderReturnLineItem\\OrderReturnLineItemDefinition';
 
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository   $orderRepository,
         private readonly EntityRepository   $orderReturnLineItemRepository,
         private readonly CommissionUpserter $upserter,

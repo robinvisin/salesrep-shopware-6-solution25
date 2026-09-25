@@ -18,6 +18,7 @@ class MarkAbandonedCartTaskHandler extends ScheduledTaskHandler
     private AbandonedCartManager $manager;
 
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskCollection> */
         EntityRepository $scheduledTaskRepository,
         AbandonedCartManager $manager,
         LoggerInterface $exceptionLogger

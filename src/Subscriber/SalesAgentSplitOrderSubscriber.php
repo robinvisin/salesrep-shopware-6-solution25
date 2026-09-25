@@ -14,6 +14,7 @@ final class SalesAgentSplitOrderSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly SalesChannelContextPersister $contextPersister,
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository $orderRepository,
     ) {
     }

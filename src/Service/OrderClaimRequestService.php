@@ -39,11 +39,15 @@ final class OrderClaimRequestService
      * @param LoggerInterface $logger
      */
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository $orderRepo,
+        /** @var EntityRepository<\SalesAgent\Core\Content\OrderClaimRequest\OrderClaimRequestCollection> */
         private readonly EntityRepository $claimReqRepo,
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository $salesAgentConfigRepo,
         private readonly AgentResolver $agentResolver,
         private readonly OrderCommissionRecalculator $recalculator,
+        /** @var EntityRepository<\Shopware\Core\System\User\UserCollection> */
         private readonly EntityRepository $userRepo,
         private readonly AbstractMailService $mailService,
         private readonly LoggerInterface $logger

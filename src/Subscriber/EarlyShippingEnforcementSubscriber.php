@@ -18,6 +18,7 @@ final class EarlyShippingEnforcementSubscriber implements EventSubscriberInterfa
     private const INSTORE_SHIPPING_TECHNICAL = 'local_pickup';
 
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Shipping\ShippingMethodCollection> */
         private readonly EntityRepository $shippingMethodRepository,
         private readonly SalesChannelContextPersister $contextPersister
     ) {}

@@ -18,6 +18,7 @@ class CategoryUrlProvider extends AbstractUrlProvider
 {
     public function __construct(
         private readonly AbstractUrlProvider $inner,
+        /** @var EntityRepository<\Shopware\Core\Content\Category\CategoryCollection> */
         private readonly EntityRepository $categoryRepository
     ) {
     }

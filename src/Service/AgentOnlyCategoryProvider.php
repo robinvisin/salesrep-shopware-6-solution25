@@ -21,6 +21,7 @@ final class AgentOnlyCategoryProvider
      * @param CacheInterface $cache
      */
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Content\Category\CategoryCollection> */
         private readonly EntityRepository $categoryRepository,
         private readonly CacheInterface $cache
     ) {

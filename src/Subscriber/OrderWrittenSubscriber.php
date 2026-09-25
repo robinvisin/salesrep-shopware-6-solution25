@@ -39,8 +39,11 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
     private const CTX_STATE_SKIP = 'sales_agent_skip_split_recompute';
 
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\OrderCollection> */
         private readonly EntityRepository    $orderRepository,
+        /** @var EntityRepository<\Shopware\Core\System\User\UserCollection> */
         private readonly EntityRepository    $userRepository,
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository    $salesAgentConfigRepository,
         private readonly SystemConfigService $systemConfig,
         private readonly RequestStack        $requestStack,

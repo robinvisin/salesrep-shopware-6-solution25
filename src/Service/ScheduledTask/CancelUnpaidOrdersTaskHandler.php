@@ -36,7 +36,9 @@ class CancelUnpaidOrdersTaskHandler extends ScheduledTaskHandler
     private int $secondsBeforeCancel;
 
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskCollection> */
         EntityRepository $scheduledTaskRepository,
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection> */
         EntityRepository $transactionRepository,
         StateMachineRegistry $stateMachineRegistry,
         ?LoggerInterface $logger = null,

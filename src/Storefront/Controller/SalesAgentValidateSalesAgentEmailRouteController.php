@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class SalesAgentValidateSalesAgentEmailRouteController
 {
     public function __construct(
+        /** @var EntityRepository<\Shopware\Core\System\User\UserCollection> */
         private readonly EntityRepository $userRepository
     ) {
     }

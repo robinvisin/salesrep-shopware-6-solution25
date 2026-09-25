@@ -20,7 +20,9 @@ final class StateTransitionSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly CommissionUpserter $upserter,
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection> */
         private readonly EntityRepository $orderTransactionRepository,
+        /** @var EntityRepository<\Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryCollection> */
         private readonly EntityRepository $orderDeliveryRepository
     ) {
     }

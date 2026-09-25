@@ -19,6 +19,7 @@ final class AgentResolver
 {
     public function __construct(
         private readonly RequestStack $requestStack,
+        /** @var EntityRepository<\SalesAgent\Core\Content\SalesAgentConfig\SalesAgentConfigCollection> */
         private readonly EntityRepository $salesAgentConfigRepo
     ) {
     }
