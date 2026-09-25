@@ -76,7 +76,7 @@ final class StateTransitionSubscriber implements EventSubscriberInterface
         /** @var OrderTransactionEntity|null $tx */
         $tx = $this->orderTransactionRepository
             ->search((new Criteria([$transactionId]))->addAssociation('order'), $context)
-            ->first();
+            ->getEntities()->first();
 
         return $tx?->getOrder()?->getId();
     }
@@ -86,7 +86,7 @@ final class StateTransitionSubscriber implements EventSubscriberInterface
         /** @var OrderDeliveryEntity|null $delivery */
         $delivery = $this->orderDeliveryRepository
             ->search((new Criteria([$deliveryId]))->addAssociation('order'), $context)
-            ->first();
+            ->getEntities()->first();
 
         return $delivery?->getOrder()?->getId();
     }

@@ -38,7 +38,7 @@ final class SalesAgentConfigProvider
                 ->addFilter(new EqualsFilter('userId', $userId))
                 ->setLimit(1);
 
-            return $this->salesAgentConfigRepository->search($criteria, $context)->first();
+            return $this->salesAgentConfigRepository->search($criteria, $context)->getEntities()->first();
         });
     }
 }

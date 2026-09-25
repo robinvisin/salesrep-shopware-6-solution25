@@ -106,7 +106,7 @@ final class CommissionUpserter
             ->addFilter(new EqualsFilter('orderVersionId', Defaults::LIVE_VERSION));
 
         $existing = $this->commissionRepo->search($criteria, $context);
-        if ($existing->count() === 0) {
+        if ($existing->getEntities()->count() === 0) {
             return;
         }
 
@@ -148,7 +148,7 @@ final class CommissionUpserter
             ->addFilter(new EqualsFilter('orderVersionId', Defaults::LIVE_VERSION));
 
         $existing = $this->commissionRepo->search($criteria, $context);
-        if ($existing->count() === 0) {
+        if ($existing->getEntities()->count() === 0) {
             return;
         }
 

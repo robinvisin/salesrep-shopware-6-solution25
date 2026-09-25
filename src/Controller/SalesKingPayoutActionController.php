@@ -46,7 +46,7 @@ class SalesKingPayoutActionController extends AbstractController
 
         $user = $this->userRepository
             ->search(new Criteria([$agentId]), $context)
-            ->first();
+            ->getEntities()->first();
 
         $customFields = $user?->getCustomFields() ?? [];
         $existingPayouts = [];

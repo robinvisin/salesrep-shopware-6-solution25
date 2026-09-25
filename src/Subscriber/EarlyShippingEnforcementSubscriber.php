@@ -59,7 +59,7 @@ final class EarlyShippingEnforcementSubscriber implements EventSubscriberInterfa
         $localPickup = $this->shippingMethodRepository->search(
             $criteria,
             $context->getContext()
-        )->first();
+        )->getEntities()->first();
 
         if ($localPickup === null) {
             return;

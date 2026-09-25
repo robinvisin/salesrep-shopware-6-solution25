@@ -48,12 +48,12 @@ class AbandonedCartReminderController
             return new JsonResponse(['success' => false, 'message' => 'cartId and customerId are required'], 400);
         }
 
-        $cart = $this->abandonedCartRepository->search(new Criteria([$cartId]), $context)->first();
+        $cart = $this->abandonedCartRepository->search(new Criteria([$cartId]), $context)->getEntities()->first();
         if (!$cart) {
             return new JsonResponse(['success' => false, 'message' => 'Cart not found'], 404);
         }
 
-        $customer = $this->customerRepository->search(new Criteria([$customerId]), $context)->first();
+        $customer = $this->customerRepository->search(new Criteria([$customerId]), $context)->getEntities()->first();
         if (!$customer || !$customer->getEmail()) {
             return new JsonResponse(['success' => false, 'message' => 'Customer email not found'], 400);
         }
@@ -209,7 +209,7 @@ class AbandonedCartReminderController
             ->addFilter(new EqualsFilter('active', true))
             ->setLimit(1);
 
-        $sc = $this->salesChannelRepository->search($criteria, $context)->first();
+        $sc = $this->salesChannelRepository->search($criteria, $context)->getEntities()->first();
 
         return $sc ? (string) $sc->getId() : '';
     }
@@ -220,7 +220,7 @@ class AbandonedCartReminderController
             ->addFilter(new EqualsFilter('salesChannelId', $salesChannelId))
             ->setLimit(1);
 
-        $domain = $this->salesChannelDomainRepository->search($criteria, $context)->first();
+        $domain = $this->salesChannelDomainRepository->search($criteria, $context)->getEntities()->first();
 
         return $domain ? (string) $domain->getUrl() : null;
     }

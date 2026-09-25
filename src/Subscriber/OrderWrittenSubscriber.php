@@ -112,7 +112,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                         ->addAssociation('stateMachineState'),
                     $ctx
                 )
-                ->first();
+                ->getEntities()->first();
 
             if (!$order) {
                 continue;
@@ -159,9 +159,9 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             if ($agentId !== '') {
                 $agentCfg = $this->salesAgentConfigRepository
                     ->search((new Criteria())->addFilter(new EqualsFilter('userId', $agentId)), $ctx)
-                    ->first();
+                    ->getEntities()->first();
 
-                $agentUser = $this->userRepository->search(new Criteria([$agentId]), $ctx)->first();
+                $agentUser = $this->userRepository->search(new Criteria([$agentId]), $ctx)->getEntities()->first();
                 $agentUserCf = $agentUser?->getCustomFields() ?? [];
 
                 $isSalesAgent =
@@ -246,7 +246,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
                         ->addFilter(new EqualsFilter('email', $this->lower($postedSplitEmail)))
                         ->setLimit(1),
                     $ctx
-                )->first();
+                )->getEntities()->first();
 
                 if ($splitUser && $splitUser->getId() !== $agentId && $this->isSalesAgentUserId((string) $splitUser->getId(), $ctx)) {
                     $splitAgentId = $splitUser->getId();
@@ -380,12 +380,12 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             ->addFilter(new EqualsFilter('userId', $userId))
             ->setLimit(1);
 
-        if ($this->salesAgentConfigRepository->search($criteria, $context)->count() > 0) {
+        if ($this->salesAgentConfigRepository->search($criteria, $context)->getEntities()->count() > 0) {
             return true;
         }
 
         /** @var UserEntity|null $user */
-        $user = $this->userRepository->search((new Criteria([$userId]))->setLimit(1), $context)->first();
+        $user = $this->userRepository->search((new Criteria([$userId]))->setLimit(1), $context)->getEntities()->first();
         $cf = $user?->getCustomFields() ?? [];
 
         return ($cf['sales_agent'] ?? $cf['is_sales_agent'] ?? false) === true
@@ -399,7 +399,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
         }
 
         /** @var UserEntity|null $user */
-        $user = $this->userRepository->search((new Criteria([$userId]))->setLimit(1), $context)->first();
+        $user = $this->userRepository->search((new Criteria([$userId]))->setLimit(1), $context)->getEntities()->first();
         if (!$user) {
             return false;
         }
@@ -470,7 +470,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             $internal = $this->internalWriteContext($system, $orderVersionId);
 
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->getEntities()->first();
             $cf = $fresh?->getCustomFields() ?? [];
 
             unset(
@@ -508,7 +508,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             $internal = $this->internalWriteContext($system, $orderVersionId);
 
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->getEntities()->first();
             $cf = $fresh?->getCustomFields() ?? [];
 
             $cf[self::CF_SPLIT_EMAIL]    = $splitEmail;
@@ -540,7 +540,7 @@ final class OrderWrittenSubscriber implements EventSubscriberInterface
             $internal = $this->internalWriteContext($system, $orderVersionId);
 
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderId]), $internal)->getEntities()->first();
             $cf = $fresh?->getCustomFields() ?? [];
 
             $cf[self::CF_CREATED_BY_SALES_AGENT] = $isSalesAgent;

@@ -78,7 +78,7 @@ final class OrderClaimService
             ->addFilter(new EqualsFilter('userId', $userId))
             ->setLimit(1);
 
-        $cfg = $this->salesAgentConfigRepo->search($criteria, $context)->first();
+        $cfg = $this->salesAgentConfigRepo->search($criteria, $context)->getEntities()->first();
 
         return $cfg?->getUniqueIdentifier(); // config id
     }

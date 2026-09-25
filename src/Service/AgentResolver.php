@@ -91,6 +91,6 @@ final class AgentResolver
             ->addFilter(new EqualsFilter('userId', $userId))
             ->setLimit(1);
 
-        return $this->salesAgentConfigRepo->search($criteria, $context)->count() > 0;
+        return $this->salesAgentConfigRepo->search($criteria, $context)->getEntities()->count() > 0;
     }
 }

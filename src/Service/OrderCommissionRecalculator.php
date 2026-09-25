@@ -58,7 +58,7 @@ final class OrderCommissionRecalculator
             ->addAssociation('stateMachineState');
 
         /** @var OrderEntity|null $order */
-        $order = $this->orderRepo->search($criteria, $context)->first();
+        $order = $this->orderRepo->search($criteria, $context)->getEntities()->first();
         if (!$order instanceof OrderEntity) {
             return;
         }
@@ -77,10 +77,10 @@ final class OrderCommissionRecalculator
         /** @var SalesAgentConfigEntity|null $agentCfg */
         $agentCfg = $this->salesAgentConfigRepo
             ->search((new Criteria())->addFilter(new EqualsFilter('userId', $agentUserId))->setLimit(1), $context)
-            ->first();
+            ->getEntities()->first();
 
         /** @var UserEntity|null $agentUser */
-        $agentUser = $this->userRepo->search(new Criteria([$agentUserId]), $context)->first();
+        $agentUser = $this->userRepo->search(new Criteria([$agentUserId]), $context)->getEntities()->first();
         $agentUserCf = $agentUser?->getCustomFields() ?? [];
 
         $isSalesAgent =
@@ -211,7 +211,7 @@ final class OrderCommissionRecalculator
 
         $cfg = $this->salesAgentConfigRepo
             ->search((new Criteria())->addFilter(new EqualsFilter('userId', $claimedUserId))->setLimit(1), $context)
-            ->first();
+            ->getEntities()->first();
 
         return $cfg ? $claimedUserId : null;
     }
@@ -267,7 +267,7 @@ final class OrderCommissionRecalculator
         $splitUser = $this->userRepo->search(
             (new Criteria())->addFilter(new EqualsFilter('email', $email))->setLimit(1),
             $context
-        )->first();
+        )->getEntities()->first();
 
         $splitId = $splitUser?->getId();
         if (!\is_string($splitId) || !Uuid::isValid($splitId)) {
@@ -281,7 +281,7 @@ final class OrderCommissionRecalculator
     {
         $cfg = $this->salesAgentConfigRepo
             ->search((new Criteria())->addFilter(new EqualsFilter('userId', $userId))->setLimit(1), $context)
-            ->first();
+            ->getEntities()->first();
 
         if ($cfg !== null) {
             return true;
@@ -305,7 +305,7 @@ final class OrderCommissionRecalculator
         $internal->addState(self::CTX_STATE_SKIP_SPLIT_RECOMPUTE);
 
         /** @var OrderEntity|null $fresh */
-        $fresh = $this->orderRepo->search(new Criteria([$orderId]), $internal)->first();
+        $fresh = $this->orderRepo->search(new Criteria([$orderId]), $internal)->getEntities()->first();
         if (!$fresh instanceof OrderEntity) {
             return;
         }

@@ -59,7 +59,7 @@ class SalesAgentCategoryAccessSubscriber implements EventSubscriberInterface
 
         $agentOnlyCategories = $this->categoryRepository
             ->search($criteria, $salesChannelContext->getContext())
-            ->getElements();
+            ->getEntities()->getElements();
 
         if (!empty($agentOnlyCategories)) {
             $this->denyAccessIfNotAgent($salesChannelContext);

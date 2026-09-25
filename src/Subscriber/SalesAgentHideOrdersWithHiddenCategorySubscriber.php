@@ -215,7 +215,7 @@ final class SalesAgentHideOrdersWithHiddenCategorySubscriber implements EventSub
         $criteria->addAssociation('lineItems');
         $criteria->addAssociation('lineItems.children');
 
-        return $this->orderRepository->search($criteria, $context)->first();
+        return $this->orderRepository->search($criteria, $context)->getEntities()->first();
     }
 
     private function refetchOrdersWithLineItems(array $orderIds, Context $context): OrderCollection

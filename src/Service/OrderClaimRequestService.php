@@ -71,7 +71,7 @@ final class OrderClaimRequestService
             ->setLimit(1);
 
         /** @var OrderEntity|null $order */
-        $order = $this->orderRepo->search($orderCriteria, $context)->first();
+        $order = $this->orderRepo->search($orderCriteria, $context)->getEntities()->first();
 
         if (!$order) {
             throw new NotFoundHttpException('Order not found.');
@@ -93,7 +93,7 @@ final class OrderClaimRequestService
             ->addFilter(new EqualsFilter('status', OrderClaimRequestEntity::STATUS_PENDING))
             ->setLimit(1);
 
-        if ($this->claimReqRepo->search($pending, $context)->count() > 0) {
+        if ($this->claimReqRepo->search($pending, $context)->getEntities()->count() > 0) {
             throw new ConflictHttpException('There is already a pending claim request for this order.');
         }
 
@@ -202,7 +202,7 @@ final class OrderClaimRequestService
 
         $reqs = $this->claimReqRepo->search($criteria, $context);
 
-        if ($reqs->count() === 0) {
+        if ($reqs->getEntities()->count() === 0) {
             return;
         }
 
@@ -311,7 +311,7 @@ final class OrderClaimRequestService
             ->setLimit(1);
 
         /** @var OrderEntity|null $order */
-        $order = $this->orderRepo->search($criteria, $context)->first();
+        $order = $this->orderRepo->search($criteria, $context)->getEntities()->first();
         if (!$order) {
             throw new NotFoundHttpException('Order not found.');
         }
@@ -340,7 +340,7 @@ final class OrderClaimRequestService
         $criteria = (new Criteria([$userId]))->setLimit(1);
 
         /** @var UserEntity|null $u */
-        $u = $this->userRepo->search($criteria, $context)->first();
+        $u = $this->userRepo->search($criteria, $context)->getEntities()->first();
         if (!$u) {
             throw new NotFoundHttpException('Agent user not found.');
         }
@@ -360,7 +360,7 @@ final class OrderClaimRequestService
     private function hasAgentConfig(string $userId, Context $context): bool
     {
         $c = (new Criteria())->addFilter(new EqualsFilter('userId', $userId))->setLimit(1);
-        return $this->salesAgentConfigRepo->search($c, $context)->count() > 0;
+        return $this->salesAgentConfigRepo->search($c, $context)->getEntities()->count() > 0;
     }
 
     private function requireAdminUserId(Context $context): string
@@ -396,7 +396,7 @@ final class OrderClaimRequestService
         }
 
         /** @var UserEntity|null $user */
-        $user = $this->userRepo->search((new Criteria([$userId]))->setLimit(1), $context)->first();
+        $user = $this->userRepo->search((new Criteria([$userId]))->setLimit(1), $context)->getEntities()->first();
         if (!$user) {
             return false;
         }
@@ -413,7 +413,7 @@ final class OrderClaimRequestService
             ->addFilter(new EqualsFilter('userId', $userId))
             ->setLimit(1);
 
-        if ($this->salesAgentConfigRepo->search($cfg, $context)->count() > 0) {
+        if ($this->salesAgentConfigRepo->search($cfg, $context)->getEntities()->count() > 0) {
             return true;
         }
 
@@ -437,7 +437,7 @@ final class OrderClaimRequestService
         $criteria = (new Criteria([$id]))->setLimit(1);
 
         /** @var OrderClaimRequestEntity|null $req */
-        $req = $this->claimReqRepo->search($criteria, $context)->first();
+        $req = $this->claimReqRepo->search($criteria, $context)->getEntities()->first();
         if (!$req) {
             throw new NotFoundHttpException('Claim request not found.');
         }

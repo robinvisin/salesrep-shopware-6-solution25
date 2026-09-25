@@ -51,7 +51,7 @@ final class SalesAgentValidateSalesAgentEmailRouteController
 
         $caller = $this->userRepository
             ->search((new Criteria([$imitatingUserId]))->setLimit(1), $context->getContext())
-            ->first();
+            ->getEntities()->first();
 
         if ($caller && strcasecmp($email, (string) $caller->getEmail()) === 0) {
             return $this->ok(false, 'same_email');
@@ -61,7 +61,7 @@ final class SalesAgentValidateSalesAgentEmailRouteController
         ->addFilter(new EqualsFilter('email', $email))
         ->setLimit(1);
 
-        $targetUser = $this->userRepository->search($criteria, $context->getContext())->first();
+        $targetUser = $this->userRepository->search($criteria, $context->getContext())->getEntities()->first();
 
         if (!$targetUser) {
             return $this->ok(false, 'not_found');

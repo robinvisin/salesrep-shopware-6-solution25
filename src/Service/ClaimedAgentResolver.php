@@ -36,7 +36,7 @@ final class ClaimedAgentResolver
             ->addFilter(new EqualsFilter('userId', $claimedUserId))
             ->setLimit(1);
 
-        $cfg = $this->salesAgentConfigRepo->search($criteria, $context)->first();
+        $cfg = $this->salesAgentConfigRepo->search($criteria, $context)->getEntities()->first();
 
         return $cfg ? $claimedUserId : null;
     }

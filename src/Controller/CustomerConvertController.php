@@ -47,7 +47,7 @@ final class CustomerConvertController extends AbstractController
         }
 
         $criteria = new Criteria([$customerId]);
-        $customer = $this->customerRepository->search($criteria, $context)->first();
+        $customer = $this->customerRepository->search($criteria, $context)->getEntities()->first();
 
         if ($customer === null) {
             return new JsonResponse(['success' => false, 'message' => 'Customer not found'], 404);
@@ -73,7 +73,7 @@ final class CustomerConvertController extends AbstractController
         ]));
         $duplicateCriteria->setLimit(1);
 
-        if ($this->customerRepository->search($duplicateCriteria, $context)->count() > 0) {
+        if ($this->customerRepository->search($duplicateCriteria, $context)->getEntities()->count() > 0) {
             return new JsonResponse([
                 'success' => false,
                 'message' => 'A registered account with this email address already exists',
@@ -111,7 +111,7 @@ final class CustomerConvertController extends AbstractController
         $criteria->addFilter(new EqualsFilter('salesChannelId', $salesChannelId));
         $criteria->setLimit(1);
 
-        $domain = $this->salesChannelDomainRepository->search($criteria, $context)->first();
+        $domain = $this->salesChannelDomainRepository->search($criteria, $context)->getEntities()->first();
 
         return $domain !== null ? rtrim((string) $domain->getUrl(), '/') : '';
     }

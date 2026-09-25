@@ -41,7 +41,7 @@ final class SalesAgentValidateSalesAgentEmailActionController extends AbstractCo
 
         $caller = $this->userRepository
             ->search((new Criteria([$callerId]))->setLimit(1), $context)
-            ->first();
+            ->getEntities()->first();
 
         if ($caller && strcasecmp($email, (string) $caller->getEmail()) === 0) {
             return $this->ok(false, 'same_email');
@@ -52,7 +52,7 @@ final class SalesAgentValidateSalesAgentEmailActionController extends AbstractCo
                 (new Criteria())->addFilter(new EqualsFilter('email', $email))->setLimit(1),
                 $context
             )
-            ->first();
+            ->getEntities()->first();
 
         if (!$target) {
             return $this->ok(false, 'not_found');

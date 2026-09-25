@@ -73,7 +73,7 @@ final class SalesAgentShippingController extends StorefrontController
         /** @var SalesAgentConfigEntity|null $cfg */
         $cfg = $this->salesAgentConfigRepository
             ->search((new Criteria())->addFilter(new EqualsFilter('userId', $agentId)), $context->getContext())
-            ->first();
+            ->getEntities()->first();
 
         $discountLimit = $this->resolveFloat(
             $cfg?->getDiscountLimit(),

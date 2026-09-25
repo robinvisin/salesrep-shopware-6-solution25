@@ -96,7 +96,7 @@ final class CommercialReturnSubscriber implements EventSubscriberInterface
         /** @var OrderEntity|null $order */
         $order = $this->orderRepository
             ->search((new Criteria([$orderIdHexLower]))->addAssociation('lineItems'), $ctx)
-            ->first();
+            ->getEntities()->first();
 
         if (!$order) {
             $this->logger->warning('[CommercialReturnSubscriber] Order not found while recalculating commission', [
@@ -245,7 +245,7 @@ final class CommercialReturnSubscriber implements EventSubscriberInterface
             $internal->addState(self::CTX_STATE_SKIP_SPLIT_RECOMPUTE);
     
             /** @var OrderEntity|null $fresh */
-            $fresh = $this->orderRepository->search(new Criteria([$orderIdHexLower]), $internal)->first();
+            $fresh = $this->orderRepository->search(new Criteria([$orderIdHexLower]), $internal)->getEntities()->first();
             $cf = $fresh?->getCustomFields() ?? [];
     
             if ($hasSplit) {
