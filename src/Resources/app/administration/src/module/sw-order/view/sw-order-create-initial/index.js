@@ -1,18 +1,17 @@
 import { Abandoned, ensureAbandonedStore } from '../../../../state/sales-agent-abandoned.state';
 
-const { Component, State } = Shopware;
+const { Component, Store } = Shopware;
 
 const resetSwOrderStateHard = async () => {
     try {
-        await State.dispatch('swOrder/resetState');
+        // 6.7: swOrder is a Pinia store. resetState, setContextToken and setSalesChannelId
+        // are all gone from it; $reset() restores the whole store to its initial state, which
+        // is what the field-by-field fallback below was emulating.
+        Store.get('swOrder').$reset();
         return;
-    } catch (e) {}
-
-    try { State.commit('swOrder/setCustomer', null); } catch {}
-    try { State.commit('swOrder/setCart', null); } catch {}
-    try { State.commit('swOrder/setCartLineItems', []); } catch {}
-    try { State.commit('swOrder/setContextToken', null); } catch {}
-    try { State.commit('swOrder/setSalesChannelId', null); } catch {}
+    } catch (e) {
+        Shopware.Utils.debug.warn('sales-agent', 'could not reset swOrder state', e);
+    }
 };
 
 Component.override('sw-order-create-initial', {
@@ -31,7 +30,7 @@ Component.override('sw-order-create-initial', {
                 return;
             }
 
-            const existing = String(State.get('swOrder')?.customer?.id || '');
+            const existing = String(Store.get('swOrder')?.customer?.id || '');
             if (existing && existing !== String(customerId)) {
                 await resetSwOrderStateHard();
             }
@@ -42,7 +41,7 @@ Component.override('sw-order-create-initial', {
                 const customer = await customerRepository.get(customerId, Shopware.Context.api);
 
                 if (customer) {
-                    State.commit('swOrder/setCustomer', customer);
+                    Store.get('swOrder').setCustomer(customer);
                 } else {
                     console.warn('[Order Create Initial] Customer not found.');
                 }

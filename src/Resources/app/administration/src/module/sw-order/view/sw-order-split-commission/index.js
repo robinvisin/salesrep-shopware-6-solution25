@@ -1,6 +1,6 @@
 import template from './sw-order-split-commission.html.twig';
 
-const { Component, State, Mixin, Application } = Shopware;
+const { Component, Store, Mixin, Application } = Shopware;
 
 function clampPercent(v) {
   const n = Number.parseInt(String(v ?? '0'), 10);
@@ -35,7 +35,7 @@ Component.register('sw-order-split-commission', {
   },
 
   computed: {
-    cart() { return State.get('swOrder')?.cart || null; },
+    cart() { return Store.get('swOrder')?.cart || null; },
     orderEntity() { return this.order || null; },
     entity() { return this.orderEntity || this.cart || null; },
 
@@ -151,7 +151,7 @@ Component.register('sw-order-split-commission', {
       const cart = this.cart;
       if (!cart) return;
 
-      State.commit('swOrder/setCart', {
+      Store.get('swOrder').setCart({
         ...cart,
         customFields: { ...(cart.customFields || {}), ...patch },
       });

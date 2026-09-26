@@ -1,4 +1,4 @@
-const { Component, State } = Shopware;
+const { Component, Store } = Shopware;
 import './index.scss';
 
 Component.override('sw-admin-menu', {
@@ -36,7 +36,7 @@ Component.override('sw-admin-menu', {
     methods: {
         __getCurrentUser() {
             const user =
-                State.get('session')?.currentUser ||
+                Store.get('session')?.currentUser ||
                 this.$store?.state?.session?.currentUser;
 
             console.log('[SalesAgentUI] __getCurrentUser()', {

@@ -1,6 +1,6 @@
 import template from './sw-order-create.html.twig';
 
-const { Component, State } = Shopware;
+const { Component, Store } = Shopware;
 
 function normalizePercent(v) {
   const n = Number(v ?? 0);
@@ -8,7 +8,7 @@ function normalizePercent(v) {
 }
 
 function readSplitFromState() {
-  const cart = State.get('swOrder')?.cart || null;
+  const cart = Store.get('swOrder')?.cart || null;
   const cf = cart?.customFields || {};
   return {
     email: (cf.sales_agent_split_email || '').trim(),
@@ -34,10 +34,10 @@ Component.override('sw-order-create', {
 
   methods: {
     resetSplitInCartState() {
-      const cart = State.get('swOrder')?.cart || null;
+      const cart = Store.get('swOrder')?.cart || null;
       if (!cart) return;
 
-      State.commit('swOrder/setCart', {
+      Store.get('swOrder').setCart({
         ...cart,
         customFields: {
           ...(cart.customFields || {}),

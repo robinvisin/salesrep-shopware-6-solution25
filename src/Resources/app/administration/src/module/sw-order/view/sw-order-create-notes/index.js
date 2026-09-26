@@ -1,6 +1,6 @@
 import template from './sw-order-create-notes.html.twig';
 
-const { Component, Mixin, State } = Shopware;
+const { Component, Mixin, Store } = Shopware;
 
 Component.register('sw-order-create-notes', {
     template,
@@ -30,11 +30,11 @@ Component.register('sw-order-create-notes', {
         },
 
         cart() {
-            return State.get('swOrder')?.cart || null;
+            return Store.get('swOrder')?.cart || null;
         },
 
         customer() {
-            return State.get('swOrder')?.customer || null;
+            return Store.get('swOrder')?.customer || null;
         },
 
         orderRepository() {
@@ -182,7 +182,7 @@ Component.register('sw-order-create-notes', {
                 delete cart.customFields.sales_agent;
             }
 
-            State.commit('swOrder/setCart', cart);
+            Store.get('swOrder').setCart(cart);
         },
 
         async pushToBackend(payload) {

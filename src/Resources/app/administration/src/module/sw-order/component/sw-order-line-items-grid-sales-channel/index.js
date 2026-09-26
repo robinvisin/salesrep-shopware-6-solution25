@@ -1,6 +1,6 @@
 import { Abandoned, ensureAbandonedStore } from '../../../../state/sales-agent-abandoned.state';
 
-const { Component, State, Service, Mixin } = Shopware;
+const { Component, Store, Service, Mixin } = Shopware;
 const { Criteria } = Shopware.Data;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -56,22 +56,11 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     try {
       this.__rebuildLiMapFromCart(this.cart?.lineItems || []);
 
-      this.__unsubscribeSw = State?._store?.subscribe?.((mutation, state) => {
-        if (!mutation || typeof mutation.type !== 'string') return;
-        if (!mutation.type.startsWith('swOrder/')) return;
-
-        if (
-          mutation.type.includes('setCartLineItems') ||
-          mutation.type.includes('loadCart') ||
-          mutation.type.includes('addCartLineItem') ||
-          mutation.type.includes('removeCartLineItem') ||
-          mutation.type.includes('updateCartLineItem') ||
-          mutation.type.includes('setContextToken') ||
-          mutation.type.includes('setCart')
-        ) {
-          const lis = state?.swOrder?.cartLineItems || [];
-          this.__rebuildLiMapFromCart(lis);
-        }
+      // Was Vuex's global subscribe, filtered down to swOrder mutations by name. Pinia
+      // subscribes per store, so the namespace filter is gone, and there are no mutation
+      // names to match on — any change to this store's state is a change worth reacting to.
+      this.__unsubscribeSw = Store.get('swOrder')?.$subscribe?.((_mutation, state) => {
+        this.__rebuildLiMapFromCart(state?.cartLineItems || []);
       });
 
       this._patchHttpOnce();
@@ -236,7 +225,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       if (!id) return '';
       const mapped = this.__liProductMap.get(id);
       if (isUuid(mapped)) return mapped;
-      const cartLI = (State.get('swOrder')?.cartLineItems || []).find(x => String(x?.id || '') === id);
+      const cartLI = (Store.get('swOrder')?.cartLineItems || []).find(x => String(x?.id || '') === id);
       const ref = cartLI?.referencedId || cartLI?.payload?.productId;
       return isUuid(ref) ? ref : '';
     },
@@ -367,11 +356,11 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       this.__abAppliedForCustomer = wanted;
     
       for (let i = 0; i < 40; i++) {
-        const cur = String(State.get('swOrder')?.customer?.id || '');
+        const cur = String(Store.get('swOrder')?.customer?.id || '');
         if (cur && cur === wanted) break;
         await sleep(100);
       }
-      if (String(State.get('swOrder')?.customer?.id || '') !== wanted) return;
+      if (String(Store.get('swOrder')?.customer?.id || '') !== wanted) return;
     
       const { scId, tokenReady, token } = await this._ensureCartContext();
       if (!(scId && tokenReady && token)) return;
@@ -393,10 +382,11 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       }
     
       try {
-        await State.dispatch('swOrder/loadCart', { salesChannelId: scId });
+        // 6.7 renamed this: loadCart is gone, getCart takes the context token too.
+        await Store.get('swOrder').getCart({ salesChannelId: scId, contextToken: token });
       } catch (e) {}
     
-      this.__rebuildLiMapFromCart(State.get('swOrder')?.cartLineItems || []);
+      this.__rebuildLiMapFromCart(Store.get('swOrder')?.cartLineItems || []);
     
       this.__abApplied = true;
       this.__abAppliedForCustomer = wanted;
@@ -408,7 +398,7 @@ Component.override('sw-order-line-items-grid-sales-channel', {
     async _ensureCartContext() {
       let scId = '';
       for (let i = 0; i < 30; i++) {
-        const st = State.get('swOrder');
+        const st = Store.get('swOrder');
         scId =
           this.salesChannelId ||
           st?.salesChannelId ||
@@ -420,20 +410,23 @@ Component.override('sw-order-line-items-grid-sales-channel', {
       if (!scId) return { scId: '', tokenReady: false, token: '' };
 
       let token =
-        State.get('swOrder')?.contextToken ||
-        State.get('swOrder')?.context?.token ||
-        State.get('swOrder')?.cartToken || '';
+        Store.get('swOrder')?.contextToken ||
+        Store.get('swOrder')?.context?.token ||
+        Store.get('swOrder')?.cartToken || '';
 
       if (!token) {
         try {
-          if (State?._store?._actions?.['swOrder/createCart']) {
-            await State.dispatch('swOrder/createCart', { salesChannelId: scId });
+          // Was a probe into Vuex's private _store._actions registry, which Pinia has no
+          // equivalent of. A Pinia action is just a method on the store.
+          if (typeof Store.get('swOrder')?.createCart === 'function') {
+            await Store.get('swOrder').createCart({ salesChannelId: scId });
           } else if (this.orderService?.createCart) {
-            const res = await this.orderService.createCart(scId, State.get('swOrder')?.customer?.id);
+            const res = await this.orderService.createCart(scId, Store.get('swOrder')?.customer?.id);
             const newToken = res?.token || res?.contextToken;
             if (newToken) {
               token = newToken;
-              try { State.commit('swOrder/setContextToken', newToken); } catch {}
+              // setContextToken is gone; the token lives on cart.token, set by setCartToken.
+              Store.get('swOrder').setCartToken(newToken);
             }
           }
         } catch { }
@@ -441,8 +434,8 @@ Component.override('sw-order-line-items-grid-sales-channel', {
 
       token =
         token ||
-        State.get('swOrder')?.contextToken ||
-        State.get('swOrder')?.context?.token || '';
+        Store.get('swOrder')?.contextToken ||
+        Store.get('swOrder')?.context?.token || '';
 
       return { scId, tokenReady: !!token, token };
     },
