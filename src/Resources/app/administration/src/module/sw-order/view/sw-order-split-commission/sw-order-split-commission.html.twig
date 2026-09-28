@@ -1,24 +1,22 @@
-<template>
-    <mt-card
-        title="Split commission"
-        class="sw-card--grid"
-    >
-        <mt-text-field
-            v-model="splitEmail"
-            label="Other agent email"
-            placeholder="agent@example.com"
-            :helpText="emailValid === false ? reasonToMessage(emailReason) : (emailValid === true ? 'Valid sales agent.' : '')"
-        />
-        <mt-number-field
-            v-model="splitPercent"
-            label="Split percent (%)"
-            :min="0"
-            :max="100"
-            :step="1"
-            :digits="0"
-            @keydown="onPercentKeydown"
-            @change="onPercentChange"
-            @blur="onPercentChange(splitPercent)"
-        />
-    </mt-card>
-</template>
+<mt-card
+    title="Split commission"
+    class="sw-card--grid"
+>
+    <mt-text-field
+        v-model="splitEmail"
+        label="Other agent email"
+        placeholder="agent@example.com"
+        :helpText="emailValid === false ? reasonToMessage(emailReason) : (emailValid === true ? 'Valid sales agent.' : '')"
+    />
+    <mt-number-field
+        v-model="splitPercent"
+        label="Split percent (%)"
+        :min="0"
+        :max="100"
+        :step="1"
+        :digits="0"
+        @keydown="onPercentKeydown"
+        @change="onPercentChange"
+        @blur="onPercentChange(splitPercent)"
+    />
+</mt-card>

@@ -1,21 +1,19 @@
-<template>
-    <mt-card
-        title="Internal Notes"
-        class="sw-order-create-notes"
-    >
-        <mt-textarea
-            v-model="note"
-            label="Notes"
-            placeholder="Write notes about this order..."
-            :rows="6"
-        />
-        <mt-datepicker
-            v-model:value="doNotShipUntil"
-            dateType="date"
-            label="Do not ship until after"
-            placeholder="YYYY-MM-DD"
-            class="mt-3"
-            :config="datePickerConfig"
-        />
-    </mt-card>
-</template>
+<mt-card
+    title="Internal Notes"
+    class="sw-order-create-notes"
+>
+    <mt-textarea
+        v-model="note"
+        label="Notes"
+        placeholder="Write notes about this order..."
+        :rows="6"
+    />
+    <mt-datepicker
+        v-model:value="doNotShipUntil"
+        dateType="date"
+        label="Do not ship until after"
+        placeholder="YYYY-MM-DD"
+        class="mt-3"
+        :config="datePickerConfig"
+    />
+</mt-card>
