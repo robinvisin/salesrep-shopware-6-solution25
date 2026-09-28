@@ -3,7 +3,10 @@
 {% block layout_head_meta_tags %}
     {{ parent() }}
 
-    {% set activeCategory = page.header.navigation.active ?? null %}
+    {# 6.7 removed Page::getHeader(). NavigationPage exposes the active category directly, and
+       only NavigationPage has it — this is a layout template that runs on every page, so the
+       `is defined` guard is what keeps product and checkout pages working. #}
+    {% set activeCategory = page.category is defined ? page.category : null %}
 
     {% if activeCategory and (activeCategory.customFields.sales_agent_only_category ?? false) %}
         <meta name="robots" content="noindex, nofollow">

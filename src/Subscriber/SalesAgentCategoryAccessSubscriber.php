@@ -34,7 +34,7 @@ class SalesAgentCategoryAccessSubscriber implements EventSubscriberInterface
 
     public function onNavigationPageLoaded(NavigationPageLoadedEvent $event): void
     {
-        $category = $event->getPage()->getHeader()->getNavigation()->getActive();
+        $category = $event->getPage()->getCategory();
         if (!$category) {
             return;
         }
