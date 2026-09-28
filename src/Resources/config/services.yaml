@@ -340,6 +340,7 @@ services:
     SalesAgent\Service\ScheduledTask\CancelUnpaidOrdersTaskHandler:
         arguments:
             - '@scheduled_task.repository'
+            - '@logger'
             - '@order_transaction.repository'
             - '@Shopware\Core\System\StateMachine\StateMachineRegistry'
         tags:
@@ -352,6 +353,7 @@ services:
     SalesAgent\Service\ScheduledTask\DeleteAbandonedCartTaskHandler:
         arguments:
             - '@scheduled_task.repository'
+            - '@logger'
             - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
         tags:
             - messenger.message_handler
@@ -363,6 +365,7 @@ services:
     SalesAgent\Service\ScheduledTask\UpdateAbandonedCartTaskHandler:
         arguments:
             - '@scheduled_task.repository'
+            - '@logger'
             - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
         tags:
             - messenger.message_handler
@@ -374,6 +377,7 @@ services:
     SalesAgent\Service\ScheduledTask\MarkAbandonedCartTaskHandler:
         arguments:
             - '@scheduled_task.repository'
+            - '@logger'
             - '@SalesAgent\Core\Checkout\AbandonedCart\AbandonedCartManager'
         tags:
             - messenger.message_handler

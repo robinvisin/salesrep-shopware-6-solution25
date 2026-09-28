@@ -38,12 +38,12 @@ class CancelUnpaidOrdersTaskHandler extends ScheduledTaskHandler
     public function __construct(
         /** @var EntityRepository<\Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskCollection> */
         EntityRepository $scheduledTaskRepository,
+        LoggerInterface $exceptionLogger,
         /** @var EntityRepository<\Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection> */
         EntityRepository $transactionRepository,
         StateMachineRegistry $stateMachineRegistry,
         ?LoggerInterface $logger = null,
-        int $secondsBeforeCancel = 172800,
-        LoggerInterface $exceptionLogger
+        int $secondsBeforeCancel = 172800
     ) {
         parent::__construct($scheduledTaskRepository, $exceptionLogger);
 
